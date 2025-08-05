@@ -34,7 +34,9 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'store',  
+    'store', 
+    'cloudinary_storage',  
+    'cloudinary',  
      'widget_tweaks',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -142,3 +144,10 @@ EMAIL_HOST_PASSWORD = 'tlsucmzgwaccdfev'
 # Razorpay Settings
 RAZORPAY_KEY_ID = 'rzp_test_mtdm8tymZbyP83'
 RAZORPAY_KEY_SECRET = '0M0sxlk7evIyBHA0CwnR1pgp'
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('dbbcxtdfm'),
+    'API_KEY': os.environ.get('763142985849835'),
+    'API_SECRET': os.environ.get('I1z4HzhP7z5-SRuHCmPRhI8iCx0'),
+    
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
