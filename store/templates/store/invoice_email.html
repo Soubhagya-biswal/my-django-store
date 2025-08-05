@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Your MyShop Order Invoice</title>
+</head>
+
+<body style="font-family: sans-serif; line-height: 1.6;">
+    <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
+        <h2 style="text-align: center; color: #333;">Thank You for Your Order!</h2>
+        <p>Hi {{ user.username }},</p>
+        <p>Your order #{{ order.id }} has been successfully delivered. Here is your invoice:</p>
+
+        <hr>
+
+        <h3>Order Summary</h3>
+        <p><strong>Order ID:</strong> {{ order.id }}</p>
+        <p><strong>Order Date:</strong> {{ order.created_at|date:"d M Y" }}</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead style="background-color: #f2f2f2;">
+                <tr>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{{ item.product.name }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ item.quantity }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹{{ item.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;"><strong>Grand
+                            Total</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                        <strong>₹{{ order.total_amount }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <p style="margin-top: 20px;">Thanks for shopping with MyShop!</p>
+    </div>
+</body>
+
+</html>

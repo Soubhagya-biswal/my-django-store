@@ -1,0 +1,76 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="card-title">
+                        {% if request.user.get_full_name %}
+                        {{ request.user.get_full_name }}
+                        {% else %}
+                        {{ request.user.username }}
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">{{ request.user.email }}</p>
+                    {% if not request.user.get_full_name %}
+                    <small class="text-muted">Username: {{ request.user.username }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">My Account</h4>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'order_history' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>📜 My Orders</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+
+                    <a href="{% url 'edit_profile' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>✏️ Edit Profile</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+
+                    <a href="{% url 'view_wishlist' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>❤️ My Wishlist</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'view_cart' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>🛒 My Cart</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'my_reviews' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>📝 My Reviews</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'password_reset' %}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>🔑 Change Password</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

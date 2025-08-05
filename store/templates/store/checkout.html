@@ -1,0 +1,22 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title">Choose Payment Method</h2>
+                    <p class="text-muted">Your total amount is ₹{{ total_price }}</p>
+                    <hr>
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'start_payment' %}" class="btn btn-success btn-lg">Pay Online with Razorpay</a>
+                        <a href="{% url 'place_cod_order' %}" class="btn btn-secondary btn-lg">Cash on Delivery
+                            (COD)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+
+    {% csrf_token %}
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- ========================= START: MAIN PRODUCT ROW (Corrected Structure) ========================= -->
+    <div class="row">
+
+        <!-- START: Left Column (for Image Gallery) -->
+        <div class="col-md-6">
+            <div class="row">
+                <!-- Thumbnail Column -->
+                <div class="col-2">
+                    <div class="thumbnail-gallery">
+                        <img src="{{ product.image.url }}" class="img-fluid thumbnail-item active"
+                            onclick="changeImage(this)">
+                        {% for img in product.images.all %}
+                        <img src="{{ img.image.url }}" class="img-fluid thumbnail-item" onclick="changeImage(this)">
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Main Image Column -->
+                <div class="col-10">
+                    <div class="zoom-container">
+                        <img src="{{ product.image.url }}" id="main-product-image" class="img-fluid rounded"
+                            alt="{{ product.name }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END: Left Column -->
+
+        <!-- START: Right Column (for Product Information) -->
+        <div class="col-md-6">
+            <div class="d-flex align-items-center mb-2">
+                <h1>{{ product.name }}</h1>
+                {% if average_rating %}
+                <span class="badge bg-warning text-dark ms-3">
+                    ⭐ {{ average_rating }}
+                </span>
+                {% endif %}
+            </div>
+            <p class="lead text-muted">{{ product.description }}</p>
+            <hr>
+            <h3 class="mb-3">
+                Price: ₹{{ product.price }}
+                {% if product.market_price and product.market_price > product.price %}
+                <small class="text-muted ms-2"><del>₹{{ product.market_price }}</del></small>
+                {% if discount_percent %}
+                <span class="badge bg-success ms-2">{{ discount_percent|floatformat:2 }}% OFF</span>
+                {% endif %}
+                {% endif %}
+            </h3>
+
+            <!-- HIGHLIGHTS SECTION (Correct Position) -->
+            {% if product.highlights %}
+            <div class="highlights-section my-4">
+                <h6 class="fw-bold">Highlights</h6>
+                <ul class="list-unstyled ps-0">
+                    {% for line in product.highlights.splitlines %}
+                    <li class="d-flex"><span class="me-2">•</span>{{ line }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <h5>Check Estimated Delivery Date</h5>
+                <div class="input-group mb-3" style="max-width: 300px;">
+                    <input type="text" class="form-control" id="pincode-input" placeholder="Enter Pincode">
+                    <button class="btn btn-outline-secondary" type="button" id="check-pincode-btn">Check</button>
+                </div>
+                <div id="delivery-result"></div>
+            </div>
+
+            {% if product.stock > 0 %}
+            <form action="{% url 'add_to_cart' product_id=product.id %}" method="post"
+                class="d-flex align-items-center mb-3">
+                {% csrf_token %}
+                <div class="input-group me-3" style="width: 150px;">
+                    <button class="btn btn-outline-secondary" type="button" id="decrement-btn">-</button>
+                    <input type="number" name="quantity" id="product-quantity" class="form-control text-center"
+                        value="1" min="1" max="{{ product.stock }}">
+                    <button class="btn btn-outline-secondary" type="button" id="increment-btn">+</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Add to Cart 🛒</button>
+            </form>
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'toggle_wishlist' product_id=product.id %}"
+                class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
+                {% if is_wishlisted %} ❤️ In Wishlist {% else %} 🤍 Add to Wishlist {% endif %}
+            </a>
+            <a href="{% url 'toggle_price_notification' product_id=product.id %}"
+                class="btn {% if is_price_subscribed %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-lg mt-2">
+                {% if is_price_subscribed %} ✔️ Subscribed to Price Drop {% else %} 🔔 Notify Me of Price Drop
+                {% endif %}
+            </a>
+            {% endif %}
+
+            {% else %}
+            <p class="text-danger fw-bold h5">Currently Out of Stock</p>
+            {% if user.is_authenticated %}
+            {% if is_subscribed %}
+            <a href="{% url 'toggle_stock_notification' product_id=product.id %}" class="btn btn-success btn-lg mt-2">✔️
+                Subscribed (Click to Unsubscribe)</a>
+            {% else %}
+            <a href="{% url 'toggle_stock_notification' product_id=product.id %}"
+                class="btn btn-info btn-lg mt-2">Notify Me When Available</a>
+            {% endif %}
+            {% else %}
+            <p class="mt-3"><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to be notified when this item
+                is back in stock.</p>
+            {% endif %}
+            {% endif %}
+        </div>
+        <!-- END: Right Column -->
+    </div>
+    <!-- ========================= END: MAIN PRODUCT ROW ========================= -->
+
+
+    <!-- ========================= START: CUSTOMER REVIEWS ROW ========================= -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h3 class="mb-4">Customer Reviews</h3>
+            <hr>
+
+            {% if user.is_authenticated %}
+            {% if not user_has_reviewed %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5>Write a Review</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.rating.id_for_label }}" class="form-label">Rating</label>
+                            {{ form.rating }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label">Comment</label>
+                            {{ form.comment }}
+                        </div>
+                        <button type="submit" class="btn btn-success">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">You have already submitted a review for this product.</div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-warning"><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to write a
+                review.</div>
+            {% endif %}
+
+            {% if reviews %}
+            {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ review.user.username }}
+                        <span class="badge bg-secondary">{{ review.get_rating_display }}</span>
+                    </h5>
+                    <p class="card-text">{{ review.comment }}</p>
+                    <small class="text-muted">Reviewed on: {{ review.created_at|date:"d M Y" }}</small>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info">No reviews yet. Be the first to write one!</div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- ========================= END: CUSTOMER REVIEWS ROW ========================= -->
+
+</div>
+
+<script>
+    // SCRIPT FOR IMAGE GALLERY
+    function changeImage(element) {
+        var mainImage = document.getElementById('main-product-image');
+        mainImage.src = element.src;
+        var thumbnails = document.getElementsByClassName('thumbnail-item');
+        for (var i = 0; i < thumbnails.length; i++) {
+            thumbnails[i].classList.remove('active');
+        }
+        element.classList.add('active');
+    }
+
+    // SCRIPT FOR QUANTITY BUTTONS
+    document.getElementById('decrement-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+        }
+    });
+    document.getElementById('increment-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        let maxStock = parseInt(quantityInput.max);
+        if (currentValue < maxStock) {
+            quantityInput.value = currentValue + 1;
+        }
+    });
+
+    // SCRIPT FOR PINCODE CHECKER
+    document.getElementById('check-pincode-btn').addEventListener('click', function () {
+        const pincode = document.getElementById('pincode-input').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const deliveryResultDiv = document.getElementById('delivery-result');
+
+        fetch("{% url 'check_delivery' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: `pincode=${pincode}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Server error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.estimated_date) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
+                } else if (data.error) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">An unknown error occurred. Please try again.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                deliveryResultDiv.innerHTML =
+                    `<p class="text-danger">${error.message}</p>`;
+            });
+    });
+</script>
+{% endblock %}

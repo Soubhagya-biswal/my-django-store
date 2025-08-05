@@ -1,0 +1,33 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">My Wishlist ❤️</h1>
+
+    {% if not wishlist_items %}
+    <div class="alert alert-info" role="alert">
+        Your wishlist is empty. <a href="{% url 'homepage' %}" class="alert-link">Explore products</a>.
+    </div>
+    {% else %}
+    <div class="row">
+        {% for item in wishlist_items %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <a href="{% url 'product_detail' product_id=item.product.id %}">
+                    <img src="{{ item.product.image.url }}" class="card-img-top" alt="{{ item.product.name }}"
+                        style="height: 220px; object-fit: cover;">
+                </a>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title"><a href="{% url 'product_detail' product_id=item.product.id %}"
+                            class="text-dark text-decoration-none">{{ item.product.name }}</a></h5>
+                    <h6 class="card-subtitle mt-auto mb-2"><strong>Price: ₹{{ item.product.price }}</strong></h6>
+                    <a href="{% url 'toggle_wishlist' product_id=item.product.id %}"
+                        class="btn btn-sm btn-outline-danger mt-2">Remove from Wishlist</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
