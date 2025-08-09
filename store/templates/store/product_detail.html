@@ -1,10 +1,13 @@
 {% extends 'store/base.html' %}
 {% load static %}
 
+
 {% block content %}
 <div class="container my-5">
 
+
     {% csrf_token %}
+
 
     {% if messages %}
     {% for message in messages %}
@@ -16,28 +19,33 @@
     {% endif %}
 
     <div class="row">
-        <!-- Image Gallery Column -->
+
         <div class="col-md-6">
             <div class="row">
+                
                 <div class="col-2">
                     <div class="thumbnail-gallery">
+                        
                         <img src="{{ product.image_url }}" class="img-fluid thumbnail-item active"
                             onclick="changeImage(this)">
+
                         {% for img in product.images.all %}
+                        
                         <img src="{{ img.image_url }}" class="img-fluid thumbnail-item" onclick="changeImage(this)">
                         {% endfor %}
                     </div>
                 </div>
+                
                 <div class="col-10">
                     <div class="zoom-container">
+                        
                         <img src="{{ product.image_url }}" id="main-product-image" class="img-fluid rounded"
                             alt="{{ product.name }}">
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Product Details Column -->
+    
         <div class="col-md-6">
             <div class="d-flex align-items-center mb-2">
                 <h1>{{ product.name }}</h1>
@@ -70,6 +78,7 @@
             </div>
             {% endif %}
 
+
             <div class="mt-4">
                 <h5>Check Estimated Delivery Date</h5>
                 <div class="input-group mb-3" style="max-width: 300px;">
@@ -78,6 +87,7 @@
                 </div>
                 <div id="delivery-result"></div>
             </div>
+
 
             {% if product.stock > 0 %}
             <form action="{% url 'add_to_cart' product_id=product.id %}" method="post"
@@ -92,6 +102,7 @@
                 <button type="submit" class="btn btn-primary btn-lg">Add to Cart 🛒</button>
             </form>
 
+
             {% if user.is_authenticated %}
             <a href="{% url 'toggle_wishlist' product_id=product.id %}"
                 class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
@@ -103,6 +114,7 @@
                 {% endif %}
             </a>
             {% endif %}
+
 
             {% else %}
             <p class="text-danger fw-bold h5">Currently Out of Stock</p>
@@ -120,13 +132,14 @@
             {% endif %}
             {% endif %}
         </div>
+        
     </div>
 
-    <!-- Customer Reviews Section -->
     <div class="row mt-5">
         <div class="col-md-12">
             <h3 class="mb-4">Customer Reviews</h3>
             <hr>
+
 
             {% if user.is_authenticated %}
             {% if not user_has_reviewed %}
@@ -155,6 +168,7 @@
                 review.</div>
             {% endif %}
 
+
             {% if reviews %}
             {% for review in reviews %}
             <div class="card mb-3">
@@ -172,40 +186,87 @@
             {% endif %}
         </div>
     </div>
+
 </div>
 
-<!-- =================================== -->
-<!-- FLOATING AI CHAT BOT (MOBILE FRIENDLY) -->
-<!-- =================================== -->
-<div class="ai-chat-fab" id="ai-chat-toggle-btn">🤖</div>
 
-<div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
-    <div class="ai-chat-header">
-        <span>AI Product Helper</span>
-        <button class="ai-chat-close-btn" id="ai-chat-close-btn">&times;</button>
-    </div>
-    <div class="ai-chat-messages" id="ai-chat-messages-area">
-        <div class="ai-message">Hi! How can I help you with the <strong>{{ product.name }}</strong>?</div>
-    </div>
-    <div class="ai-chat-input-area">
-        <input type="text" id="ai-chat-input-field" placeholder="Ask a question...">
-        <button id="ai-chat-send-btn">➤</button>
-    </div>
-</div>
-
-<!-- Styles for the AI Chat Bot -->
-<style>
-    body {
-        overflow-x: hidden !important;
+<script>
+    
+    function changeImage(element) {
+        var mainImage = document.getElementById('main-product-image');
+        mainImage.src = element.src;
+        var thumbnails = document.getElementsByClassName('thumbnail-item');
+        for (var i = 0; i < thumbnails.length; i++) {
+            thumbnails[i].classList.remove('active');
+        }
+        element.classList.add('active');
     }
 
-    /* BRAHMASTRA LINE */
+    document.getElementById('decrement-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+        }
+    });
+    document.getElementById('increment-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        let maxStock = parseInt(quantityInput.max);
+        if (currentValue < maxStock) {
+            quantityInput.value = currentValue + 1;
+        }
+    });
 
+    document.getElementById('check-pincode-btn').addEventListener('click', function () {
+        const pincode = document.getElementById('pincode-input').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const deliveryResultDiv = document.getElementById('delivery-result');
+
+
+        fetch("{% url 'check_delivery' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: `pincode=${pincode}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Server error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.estimated_date) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
+                } else if (data.error) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">An unknown error occurred. Please try again.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                deliveryResultDiv.innerHTML =
+                    `<p class="text-danger">${error.message}</p>`;
+            });
+    });
+</script>
+
+<style>
+    
     .ai-chat-fab {
         position: fixed;
         bottom: 25px;
         right: 25px;
-        background-color: #0d6efd;
+        background-color: #007bff;
         color: white;
         width: 60px;
         height: 60px;
@@ -215,9 +276,9 @@
         align-items: center;
         font-size: 28px;
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         z-index: 999;
-        transition: transform 0.2s ease-in-out;
+        transition: transform 0.2s;
     }
 
     .ai-chat-fab:hover {
@@ -228,28 +289,27 @@
         position: fixed;
         bottom: 100px;
         right: 25px;
-        width: 370px;
+        width: 350px;
+        max-width: 90%;
         height: 500px;
         background: white;
         border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         display: none;
-        /* Hidden by default */
         flex-direction: column;
         z-index: 1000;
         overflow: hidden;
-        border: 1px solid #e0e0e0;
+        border: 1px solid #ccc;
     }
 
     .ai-chat-window.open {
         display: flex;
-        /* Shown when 'open' class is added */
     }
 
     .ai-chat-header {
-        background: #0d6efd;
+        background: #007bff;
         color: white;
-        padding: 12px 15px;
+        padding: 15px;
         font-weight: bold;
         display: flex;
         justify-content: space-between;
@@ -260,42 +320,26 @@
         background: none;
         border: none;
         color: white;
-        font-size: 24px;
+        font-size: 20px;
         cursor: pointer;
-        padding: 0 5px;
-        line-height: 1;
     }
 
     .ai-chat-messages {
         flex-grow: 1;
         padding: 15px;
         overflow-y: auto;
-        background-color: #f8f9fa;
+        background-color: #f4f7f9;
         display: flex;
         flex-direction: column;
-        gap: 12px;
     }
 
-    .ai-chat-messages .user-message,
-    .ai-chat-messages .ai-message {
+    .ai-chat-messages p {
+        background-color: #e9e9eb;
         padding: 10px 15px;
         border-radius: 18px;
-        line-height: 1.4;
+        margin-bottom: 10px;
         max-width: 80%;
-    }
-
-    .ai-chat-messages .user-message {
-        align-self: flex-end;
-        background-color: #0d6efd;
-        color: white;
-        border-bottom-right-radius: 4px;
-    }
-
-    .ai-chat-messages .ai-message {
         align-self: flex-start;
-        background-color: #e9ecef;
-        color: #333;
-        border-bottom-left-radius: 4px;
     }
 
     .ai-chat-input-area {
@@ -311,149 +355,127 @@
         border-radius: 20px;
         padding: 10px 15px;
         margin-right: 10px;
-        outline: none;
-    }
-
-    .ai-chat-input-area input:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .25);
     }
 
     .ai-chat-input-area button {
-        background-color: #0d6efd;
+        background-color: #007bff;
         border: none;
         color: white;
         border-radius: 50%;
         width: 45px;
         height: 45px;
-        flex-shrink: 0;
         font-size: 18px;
         cursor: pointer;
         transition: background-color 0.2s;
     }
 
-    /* TABAHAHI MOBILE FIX */
-    @media (max-width: 767px) {
-        .ai-chat-window {
-            right: 10px;
-            left: 10px;
-            bottom: 90px;
-            width: auto;
-            max-width: none;
-            height: calc(100vh - 120px);
-            /* Taller on mobile */
-            max-height: 600px;
-        }
-
-        .ai-chat-fab {
-            bottom: 20px;
-            right: 20px;
-        }
+    .ai-chat-input-area button:hover {
+        background-color: #0056b3;
     }
 </style>
 
-<!-- Scripts for the page -->
+<div class="ai-chat-fab" id="ai-chat-toggle-btn">
+    🤖
+</div>
+
+<div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
+    <div class="ai-chat-header">
+        <span>AI Product Helper</span>
+        <button class="ai-chat-close-btn" id="ai-chat-close-btn">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+        <p>Hi! How can I help you with this product?</p>
+    </div>
+    <div class="ai-chat-input-area">
+        <input type="text" id="ai-chat-input" placeholder="Ask a question...">
+        <button id="ai-chat-send-btn">➤</button>
+    </div>
+</div>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Basic page functions
-        window.changeImage = function (element) {
-            document.getElementById('main-product-image').src = element.src;
-            Array.from(document.getElementsByClassName('thumbnail-item')).forEach(thumb => thumb.classList
-                .remove('active'));
-            element.classList.add('active');
-        };
-        if (document.getElementById('decrement-btn')) {
-            document.getElementById('decrement-btn').onclick = () => {
-                let input = document.getElementById('product-quantity');
-                if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
-            };
-        }
-        if (document.getElementById('increment-btn')) {
-            document.getElementById('increment-btn').onclick = () => {
-                let input = document.getElementById('product-quantity');
-                if (parseInt(input.value) < parseInt(input.max)) input.value = parseInt(input.value) + 1;
-            };
-        }
-        document.getElementById('check-pincode-btn').onclick = () => {
-            const pincode = document.getElementById('pincode-input').value;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const resultDiv = document.getElementById('delivery-result');
-            fetch("{% url 'check_delivery' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: `pincode=${pincode}`
-                })
-                .then(res => res.json().then(data => ({
-                    ok: res.ok,
-                    data
-                })))
-                .then(res => {
-                    if (res.ok) resultDiv.innerHTML =
-                        `<p class="text-success">Estimated delivery to ${res.data.city} by: <b>${res.data.estimated_date}</b></p>`;
-                    else resultDiv.innerHTML =
-                        `<p class="text-danger">${res.data.error || 'An unknown error occurred.'}</p>`;
-                }).catch(err => resultDiv.innerHTML = `<p class="text-danger">${err.message}</p>`);
-        };
+    const chatWindow = document.getElementById('ai-chat-window');
+    const toggleBtn = document.getElementById('ai-chat-toggle-btn');
+    const closeBtn = document.getElementById('ai-chat-close-btn');
+    const messagesArea = document.getElementById('ai-chat-messages');
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+    const inputBox = document.getElementById('ai-chat-input');
 
-        // AI Chat Bot functions
-        const chatWindow = document.getElementById('ai-chat-window');
-        const toggleBtn = document.getElementById('ai-chat-toggle-btn');
-        const closeBtn = document.getElementById('ai-chat-close-btn');
-        const messagesArea = document.getElementById('ai-chat-messages-area');
-        const sendBtn = document.getElementById('ai-chat-send-btn');
-        const inputBox = document.getElementById('ai-chat-input-field');
-
-        toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
-        closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
-        sendBtn.addEventListener('click', sendMessage);
-        inputBox.addEventListener('keyup', e => {
-            if (e.key === "Enter") sendMessage();
-        });
-
-        function addMessage(text, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = type;
-            messageDiv.innerHTML = text; // Use innerHTML to render any potential HTML tags from AI
-            messagesArea.appendChild(messageDiv);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
-            return messageDiv;
-        }
-
-        function sendMessage() {
-            const question = inputBox.value.trim();
-            if (question === "") return;
-
-            addMessage(question, 'user-message');
-            inputBox.value = "";
-
-            const loadingIndicator = addMessage('...', 'ai-message');
-            const productId = chatWindow.dataset.productId;
-            const url = "{% url 'ask_ai' %}";
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        question: question
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    loadingIndicator.innerHTML = data.answer || 'Sorry, I could not find an answer.';
-                })
-                .catch(error => {
-                    console.error('AI Chat Error:', error);
-                    loadingIndicator.innerHTML = 'Oops! Something went wrong. Please try again.';
-                });
+    
+    toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
+    closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
+    sendBtn.addEventListener('click', sendMessage);
+    inputBox.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") {
+            sendMessage();
         }
     });
+
+    function sendMessage() {
+        const question = inputBox.value.trim();
+        if (question === "") {
+            return; 
+        }
+        addMessage(question, 'user');
+        inputBox.value = ""; 
+
+        
+        addMessage('...', 'bot', true);
+        const productId = chatWindow.dataset.productId;
+        const url = "{% url 'ask_ai' %}"; 
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    question: question
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateLastBotMessage(data.answer);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateLastBotMessage('Sorry, something went wrong. Please try again.');
+            });
+    }
+
+    function addMessage(text, type, isLoading = false) {
+        const p = document.createElement('p');
+        p.textContent = text;
+        p.className = `message ${type}-message`;
+        if (isLoading) {
+            p.id = 'loading-message';
+        }
+        messagesArea.appendChild(p);
+        messagesArea.scrollTop = messagesArea.scrollHeight; 
+    }
+
+    function updateLastBotMessage(text) {
+        const loadingMessage = document.getElementById('loading-message');
+        if (loadingMessage) {
+            loadingMessage.textContent = text;
+            loadingMessage.id = ''; 
+        }
+    }
+
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+        .user-message { 
+            align-self: flex-end; 
+            background-color: #007bff; 
+            color: white; 
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e9e9eb;
+        }
+    `;
+    document.head.appendChild(styleSheet);
 </script>
+
 {% endblock %}
