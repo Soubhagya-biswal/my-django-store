@@ -84,10 +84,10 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extrajs %}
-{{ block.super }}
+<!-- ======================================================= -->
+<!-- YEH HAI HUMARA NAYA, TABAHAHI WAALA JAVASCRIPT ('CURRENT') -->
+<!-- ======================================================= -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-chart-btn');
@@ -95,7 +95,9 @@
 
         if (toggleBtn && analysisSection) {
             toggleBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+                e.preventDefault(); // Yeh link ko kaam karne se rokta hai
+
+                // Yahan hum check karke, section ko dikhate ya chhupate hain
                 if (analysisSection.style.display === 'none') {
                     analysisSection.style.display = 'block';
                     toggleBtn.textContent = 'Hide Sales Analysis';
