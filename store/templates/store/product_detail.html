@@ -122,34 +122,6 @@
         </div>
     </div>
 
-    <!-- =================================== -->
-    <!-- NAYA, TABAHAHI AI CHAT SECTION      -->
-    <!-- =================================== -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card shadow-sm" id="ai-product-chat-container">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Ask our AI Product Helper 🤖</h4>
-                </div>
-                <div class="card-body">
-                    <div id="ai-chat-messages-area"
-                        style="height: 350px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px;">
-                        <!-- Messages will appear here -->
-                        <div class="ai-message">
-                            <p class="mb-0">Hi! How can I help you with the <strong>{{ product.name }}</strong>? You can
-                                ask about features, warranty, or anything else!</p>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="ai-chat-input-field" class="form-control form-control-lg"
-                            placeholder="e.g., What is the warranty?">
-                        <button class="btn btn-primary" id="ai-chat-send-btn">Send ➤</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Customer Reviews Section -->
     <div class="row mt-5">
         <div class="col-md-12">
@@ -203,125 +175,260 @@
 </div>
 
 <!-- =================================== -->
-<!-- SCRIPTS AND STYLES FOR THE PAGE     -->
+<!-- FLOATING AI CHAT BOT (MOBILE FRIENDLY) -->
 <!-- =================================== -->
+<div class="ai-chat-fab" id="ai-chat-toggle-btn">🤖</div>
 
-<!-- Basic Page Functionality (Image switcher, quantity, pincode) -->
-<script>
-    function changeImage(element) {
-        var mainImage = document.getElementById('main-product-image');
-        mainImage.src = element.src;
-        var thumbnails = document.getElementsByClassName('thumbnail-item');
-        for (var i = 0; i < thumbnails.length; i++) {
-            thumbnails[i].classList.remove('active');
-        }
-        element.classList.add('active');
-    }
+<div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
+    <div class="ai-chat-header">
+        <span>AI Product Helper</span>
+        <button class="ai-chat-close-btn" id="ai-chat-close-btn">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages-area">
+        <div class="ai-message">Hi! How can I help you with the <strong>{{ product.name }}</strong>?</div>
+    </div>
+    <div class="ai-chat-input-area">
+        <input type="text" id="ai-chat-input-field" placeholder="Ask a question...">
+        <button id="ai-chat-send-btn">➤</button>
+    </div>
+</div>
 
-    if (document.getElementById('decrement-btn')) {
-        document.getElementById('decrement-btn').addEventListener('click', function () {
-            let quantityInput = document.getElementById('product-quantity');
-            let currentValue = parseInt(quantityInput.value);
-            if (currentValue > 1) {
-                quantityInput.value = currentValue - 1;
-            }
-        });
-    }
-
-    if (document.getElementById('increment-btn')) {
-        document.getElementById('increment-btn').addEventListener('click', function () {
-            let quantityInput = document.getElementById('product-quantity');
-            let currentValue = parseInt(quantityInput.value);
-            let maxStock = parseInt(quantityInput.max);
-            if (currentValue < maxStock) {
-                quantityInput.value = currentValue + 1;
-            }
-        });
-    }
-
-    document.getElementById('check-pincode-btn').addEventListener('click', function () {
-        const pincode = document.getElementById('pincode-input').value;
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const deliveryResultDiv = document.getElementById('delivery-result');
-
-        fetch("{% url 'check_delivery' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrfToken
-                },
-                body: `pincode=${pincode}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.error || 'Server error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.estimated_date) {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
-                } else {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-danger">${data.error || 'An unknown error occurred.'}</p>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                deliveryResultDiv.innerHTML = `<p class="text-danger">${error.message}</p>`;
-            });
-    });
-</script>
-
-<!-- Styles for the new AI Chat Section -->
+<!-- Styles for the AI Chat Bot -->
 <style>
-    #ai-chat-messages-area p {
+    .ai-chat-fab {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background-color: #0d6efd;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        z-index: 999;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .ai-chat-fab:hover {
+        transform: scale(1.1);
+    }
+
+    .ai-chat-window {
+        position: fixed;
+        bottom: 100px;
+        right: 25px;
+        width: 370px;
+        height: 500px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        display: none;
+        /* Hidden by default */
+        flex-direction: column;
+        z-index: 1000;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+    }
+
+    .ai-chat-window.open {
+        display: flex;
+        /* Shown when 'open' class is added */
+    }
+
+    .ai-chat-header {
+        background: #0d6efd;
+        color: white;
+        padding: 12px 15px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ai-chat-close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0 5px;
+        line-height: 1;
+    }
+
+    .ai-chat-messages {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ai-chat-messages .user-message,
+    .ai-chat-messages .ai-message {
         padding: 10px 15px;
         border-radius: 18px;
-        line-height: 1.5;
-        max-width: 85%;
-        margin-bottom: 0;
+        line-height: 1.4;
+        max-width: 80%;
     }
 
-    .user-message {
+    .ai-chat-messages .user-message {
         align-self: flex-end;
         background-color: #0d6efd;
         color: white;
         border-bottom-right-radius: 4px;
     }
 
-    .ai-message {
+    .ai-chat-messages .ai-message {
         align-self: flex-start;
         background-color: #e9ecef;
         color: #333;
         border-bottom-left-radius: 4px;
     }
+
+    .ai-chat-input-area {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+        background-color: #fff;
+    }
+
+    .ai-chat-input-area input {
+        flex-grow: 1;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 10px 15px;
+        margin-right: 10px;
+        outline: none;
+    }
+
+    .ai-chat-input-area input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .25);
+    }
+
+    .ai-chat-input-area button {
+        background-color: #0d6efd;
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    /* TABAHAHI MOBILE FIX */
+    @media (max-width: 767px) {
+        .ai-chat-window {
+            right: 10px;
+            left: 10px;
+            bottom: 90px;
+            width: auto;
+            max-width: none;
+            height: calc(100vh - 120px);
+            /* Taller on mobile */
+            max-height: 600px;
+        }
+
+        .ai-chat-fab {
+            bottom: 20px;
+            right: 20px;
+        }
+    }
 </style>
 
-<!-- JavaScript for the new AI Chat Section -->
+<!-- Scripts for the page -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const sendButton = document.getElementById('ai-chat-send-btn');
-        const inputField = document.getElementById('ai-chat-input-field');
-        const messagesContainer = document.getElementById('ai-chat-messages-area');
+        // Basic page functions
+        window.changeImage = function (element) {
+            document.getElementById('main-product-image').src = element.src;
+            Array.from(document.getElementsByClassName('thumbnail-item')).forEach(thumb => thumb.classList
+                .remove('active'));
+            element.classList.add('active');
+        };
+        if (document.getElementById('decrement-btn')) {
+            document.getElementById('decrement-btn').onclick = () => {
+                let input = document.getElementById('product-quantity');
+                if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+            };
+        }
+        if (document.getElementById('increment-btn')) {
+            document.getElementById('increment-btn').onclick = () => {
+                let input = document.getElementById('product-quantity');
+                if (parseInt(input.value) < parseInt(input.max)) input.value = parseInt(input.value) + 1;
+            };
+        }
+        document.getElementById('check-pincode-btn').onclick = () => {
+            const pincode = document.getElementById('pincode-input').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const resultDiv = document.getElementById('delivery-result');
+            fetch("{% url 'check_delivery' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: `pincode=${pincode}`
+                })
+                .then(res => res.json().then(data => ({
+                    ok: res.ok,
+                    data
+                })))
+                .then(res => {
+                    if (res.ok) resultDiv.innerHTML =
+                        `<p class="text-success">Estimated delivery to ${res.data.city} by: <b>${res.data.estimated_date}</b></p>`;
+                    else resultDiv.innerHTML =
+                        `<p class="text-danger">${res.data.error || 'An unknown error occurred.'}</p>`;
+                }).catch(err => resultDiv.innerHTML = `<p class="text-danger">${err.message}</p>`);
+        };
 
-        const productId = "{{ product.id }}";
-        const askAiUrl = "{% url 'ask_ai' %}";
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        // AI Chat Bot functions
+        const chatWindow = document.getElementById('ai-chat-window');
+        const toggleBtn = document.getElementById('ai-chat-toggle-btn');
+        const closeBtn = document.getElementById('ai-chat-close-btn');
+        const messagesArea = document.getElementById('ai-chat-messages-area');
+        const sendBtn = document.getElementById('ai-chat-send-btn');
+        const inputBox = document.getElementById('ai-chat-input-field');
 
-        function handleSendMessage() {
-            const question = inputField.value.trim();
+        toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
+        closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
+        sendBtn.addEventListener('click', sendMessage);
+        inputBox.addEventListener('keyup', e => {
+            if (e.key === "Enter") sendMessage();
+        });
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.innerHTML = text; // Use innerHTML to render any potential HTML tags from AI
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            return messageDiv;
+        }
+
+        function sendMessage() {
+            const question = inputBox.value.trim();
             if (question === "") return;
 
-            addMessageToUI(question, 'user-message');
-            inputField.value = "";
+            addMessage(question, 'user-message');
+            inputBox.value = "";
 
-            const typingIndicator = addMessageToUI('...', 'ai-message');
+            const loadingIndicator = addMessage('...', 'ai-message');
+            const productId = chatWindow.dataset.productId;
+            const url = "{% url 'ask_ai' %}";
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            fetch(askAiUrl, {
+            fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -334,36 +441,13 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    typingIndicator.innerHTML =
-                        `<p class="mb-0">${data.answer || 'Sorry, I could not find an answer.'}</p>`;
+                    loadingIndicator.innerHTML = data.answer || 'Sorry, I could not find an answer.';
                 })
                 .catch(error => {
                     console.error('AI Chat Error:', error);
-                    typingIndicator.innerHTML =
-                        '<p class="mb-0">Oops! Something went wrong. Please try again.</p>';
+                    loadingIndicator.innerHTML = 'Oops! Something went wrong. Please try again.';
                 });
         }
-
-        function addMessageToUI(text, className) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = className;
-
-            const p = document.createElement('p');
-            p.innerHTML = text;
-
-            messageDiv.appendChild(p);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return messageDiv;
-        }
-
-        sendButton.addEventListener('click', handleSendMessage);
-        inputField.addEventListener('keyup', function (event) {
-            if (event.key === "Enter") {
-                handleSendMessage();
-            }
-        });
     });
 </script>
-
 {% endblock %}
