@@ -957,3 +957,8 @@ def ask_ai_buddy(request):
             return JsonResponse({'answer': error_message}, status=500)
 
     return JsonResponse({'answer': 'Invalid request method.'}, status=405)
+def ai_chat_page(request):
+    """
+    Yeh function bas humare naye, general AI Chat Room ke 'chehre' (HTML page) ko dikhata hai.
+    """
+    return render(request, 'store/ai_chat_page.html')

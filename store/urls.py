@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.homepage, name='homepage'),
+    path('ai-chat/', views.ai_chat_page, name='ai_chat_page'),
     path('sales-chart-iframe/', views.sales_chart_iframe, name='sales_chart_iframe'),
     path('signup/', views.signup, name='signup'),
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
