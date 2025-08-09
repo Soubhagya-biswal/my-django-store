@@ -1,13 +1,9 @@
 {% extends 'store/base.html' %}
 {% load static %}
 
-
 {% block content %}
 <div class="container my-5">
-
-
     {% csrf_token %}
-
 
     {% if messages %}
     {% for message in messages %}
@@ -19,33 +15,26 @@
     {% endif %}
 
     <div class="row">
-
         <div class="col-md-6">
             <div class="row">
-                
                 <div class="col-2">
                     <div class="thumbnail-gallery">
-                        
                         <img src="{{ product.image_url }}" class="img-fluid thumbnail-item active"
                             onclick="changeImage(this)">
-
                         {% for img in product.images.all %}
-                        
                         <img src="{{ img.image_url }}" class="img-fluid thumbnail-item" onclick="changeImage(this)">
                         {% endfor %}
                     </div>
                 </div>
-                
                 <div class="col-10">
                     <div class="zoom-container">
-                        
                         <img src="{{ product.image_url }}" id="main-product-image" class="img-fluid rounded"
                             alt="{{ product.name }}">
                     </div>
                 </div>
             </div>
         </div>
-    
+
         <div class="col-md-6">
             <div class="d-flex align-items-center mb-2">
                 <h1>{{ product.name }}</h1>
@@ -78,7 +67,6 @@
             </div>
             {% endif %}
 
-
             <div class="mt-4">
                 <h5>Check Estimated Delivery Date</h5>
                 <div class="input-group mb-3" style="max-width: 300px;">
@@ -87,7 +75,6 @@
                 </div>
                 <div id="delivery-result"></div>
             </div>
-
 
             {% if product.stock > 0 %}
             <form action="{% url 'add_to_cart' product_id=product.id %}" method="post"
@@ -102,7 +89,6 @@
                 <button type="submit" class="btn btn-primary btn-lg">Add to Cart 🛒</button>
             </form>
 
-
             {% if user.is_authenticated %}
             <a href="{% url 'toggle_wishlist' product_id=product.id %}"
                 class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
@@ -114,7 +100,6 @@
                 {% endif %}
             </a>
             {% endif %}
-
 
             {% else %}
             <p class="text-danger fw-bold h5">Currently Out of Stock</p>
@@ -132,14 +117,12 @@
             {% endif %}
             {% endif %}
         </div>
-        
     </div>
 
     <div class="row mt-5">
         <div class="col-md-12">
             <h3 class="mb-4">Customer Reviews</h3>
             <hr>
-
 
             {% if user.is_authenticated %}
             {% if not user_has_reviewed %}
@@ -168,7 +151,6 @@
                 review.</div>
             {% endif %}
 
-
             {% if reviews %}
             {% for review in reviews %}
             <div class="card mb-3">
@@ -186,82 +168,9 @@
             {% endif %}
         </div>
     </div>
-
 </div>
 
-
-<script>
-    
-    function changeImage(element) {
-        var mainImage = document.getElementById('main-product-image');
-        mainImage.src = element.src;
-        var thumbnails = document.getElementsByClassName('thumbnail-item');
-        for (var i = 0; i < thumbnails.length; i++) {
-            thumbnails[i].classList.remove('active');
-        }
-        element.classList.add('active');
-    }
-
-    document.getElementById('decrement-btn').addEventListener('click', function () {
-        let quantityInput = document.getElementById('product-quantity');
-        let currentValue = parseInt(quantityInput.value);
-        if (currentValue > 1) {
-            quantityInput.value = currentValue - 1;
-        }
-    });
-    document.getElementById('increment-btn').addEventListener('click', function () {
-        let quantityInput = document.getElementById('product-quantity');
-        let currentValue = parseInt(quantityInput.value);
-        let maxStock = parseInt(quantityInput.max);
-        if (currentValue < maxStock) {
-            quantityInput.value = currentValue + 1;
-        }
-    });
-
-    document.getElementById('check-pincode-btn').addEventListener('click', function () {
-        const pincode = document.getElementById('pincode-input').value;
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const deliveryResultDiv = document.getElementById('delivery-result');
-
-
-        fetch("{% url 'check_delivery' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrfToken
-                },
-                body: `pincode=${pincode}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.error || 'Server error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.estimated_date) {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
-                } else if (data.error) {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-danger">${data.error}</p>`;
-                } else {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-danger">An unknown error occurred. Please try again.</p>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                deliveryResultDiv.innerHTML =
-                    `<p class="text-danger">${error.message}</p>`;
-            });
-    });
-</script>
-
 <style>
-    
     .ai-chat-fab {
         position: fixed;
         bottom: 25px;
@@ -372,12 +281,27 @@
     .ai-chat-input-area button:hover {
         background-color: #0056b3;
     }
+
+    /* 🔹 RESPONSIVE FIXES FOR MOBILE */
+    @media (max-width: 768px) {
+        .ai-chat-window {
+            bottom: 80px;
+            right: 10px;
+            width: 95%;
+            height: 70%;
+        }
+
+        .ai-chat-fab {
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+        }
+    }
 </style>
 
-<div class="ai-chat-fab" id="ai-chat-toggle-btn">
-    🤖
-</div>
-
+<div class="ai-chat-fab" id="ai-chat-toggle-btn">🤖</div>
 <div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
     <div class="ai-chat-header">
         <span>AI Product Helper</span>
@@ -391,7 +315,71 @@
         <button id="ai-chat-send-btn">➤</button>
     </div>
 </div>
+
 <script>
+    function changeImage(element) {
+        var mainImage = document.getElementById('main-product-image');
+        mainImage.src = element.src;
+        var thumbnails = document.getElementsByClassName('thumbnail-item');
+        for (var i = 0; i < thumbnails.length; i++) {
+            thumbnails[i].classList.remove('active');
+        }
+        element.classList.add('active');
+    }
+    document.getElementById('decrement-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+        }
+    });
+    document.getElementById('increment-btn').addEventListener('click', function () {
+        let quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+        let maxStock = parseInt(quantityInput.max);
+        if (currentValue < maxStock) {
+            quantityInput.value = currentValue + 1;
+        }
+    });
+    document.getElementById('check-pincode-btn').addEventListener('click', function () {
+        const pincode = document.getElementById('pincode-input').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const deliveryResultDiv = document.getElementById('delivery-result');
+        fetch("{% url 'check_delivery' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: `pincode=${pincode}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Server error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.estimated_date) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
+                } else if (data.error) {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    deliveryResultDiv.innerHTML =
+                        `<p class="text-danger">An unknown error occurred. Please try again.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                deliveryResultDiv.innerHTML =
+                    `<p class="text-danger">${error.message}</p>`;
+            });
+    });
+
     const chatWindow = document.getElementById('ai-chat-window');
     const toggleBtn = document.getElementById('ai-chat-toggle-btn');
     const closeBtn = document.getElementById('ai-chat-close-btn');
@@ -399,7 +387,6 @@
     const sendBtn = document.getElementById('ai-chat-send-btn');
     const inputBox = document.getElementById('ai-chat-input');
 
-    
     toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
     closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
     sendBtn.addEventListener('click', sendMessage);
@@ -411,18 +398,13 @@
 
     function sendMessage() {
         const question = inputBox.value.trim();
-        if (question === "") {
-            return; 
-        }
+        if (question === "") return;
         addMessage(question, 'user');
-        inputBox.value = ""; 
-
-        
+        inputBox.value = "";
         addMessage('...', 'bot', true);
         const productId = chatWindow.dataset.productId;
-        const url = "{% url 'ask_ai' %}"; 
+        const url = "{% url 'ask_ai' %}";
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
         fetch(url, {
                 method: 'POST',
                 headers: {
@@ -452,30 +434,22 @@
             p.id = 'loading-message';
         }
         messagesArea.appendChild(p);
-        messagesArea.scrollTop = messagesArea.scrollHeight; 
+        messagesArea.scrollTop = messagesArea.scrollHeight;
     }
 
     function updateLastBotMessage(text) {
         const loadingMessage = document.getElementById('loading-message');
         if (loadingMessage) {
             loadingMessage.textContent = text;
-            loadingMessage.id = ''; 
+            loadingMessage.id = '';
         }
     }
 
     const styleSheet = document.createElement("style");
     styleSheet.innerText = `
-        .user-message { 
-            align-self: flex-end; 
-            background-color: #007bff; 
-            color: white; 
-        }
-        .bot-message {
-            align-self: flex-start;
-            background-color: #e9e9eb;
-        }
+        .user-message { align-self: flex-end; background-color: #007bff; color: white; }
+        .bot-message { align-self: flex-start; background-color: #e9e9eb; }
     `;
     document.head.appendChild(styleSheet);
 </script>
-
 {% endblock %}
