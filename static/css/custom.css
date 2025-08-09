@@ -123,14 +123,11 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
 }
-/* =================================== */
-/*  STYLES FOR NEW PRODUCT DETAIL PAGE  */
-/* =================================== */
 
 .thumbnail-gallery {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Space between thumbnails */
+    gap: 10px; 
 }
 
 .thumbnail-item {
@@ -146,19 +143,52 @@ body {
 }
 
 .thumbnail-item.active {
-    border-color: #0d6efd; /* Highlight for the active thumbnail */
+    border-color: #0d6efd; 
 }
-/* --- Styles for Product Image Zoom Effect --- */
+
 .zoom-container {
-    overflow: hidden; /* This is the most important part! It clips the zoomed image. */
-    border-radius: 0.25rem; /* Matches the 'rounded' class from Bootstrap */
+    overflow: hidden; 
+    border-radius: 0.25rem; 
 }
 
 .zoom-container img {
-    transition: transform 0.3s ease; /* Adds a smooth animation */
+    transition: transform 0.3s ease; 
 }
 
 .zoom-container:hover img {
-    transform: scale(1.5); /* Zooms the image to 150% of its size */
+    transform: scale(1.5); 
     cursor: zoom-in;
+}
+
+#ai-chat-icon {
+    position: fixed; 
+    z-index: 1050;   
+    
+    
+    bottom: 25px;
+    right: 25px;
+    
+    background-color: #0d6efd; 
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: transform 0.2s ease;
+}
+
+#ai-chat-icon:hover {
+    transform: scale(1.1); 
+}
+
+@media (max-width: 767px) {
+    #ai-chat-icon {
+        bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+    }
 }
