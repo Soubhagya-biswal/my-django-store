@@ -7,10 +7,9 @@
 <div id="content-main">
     <h1>MyShop Sales Dashboard</h1>
 
-    <!-- Data Cards - Using a robust CSS Grid layout -->
+    <!-- Data Cards -->
     <div id="dashboard-cards"
         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-
         <div class="module">
             <div class="caption" style="text-align: center;">Revenue (Today)</div>
             <h2 style="text-align: center; margin-top: 0.5rem; color: var(--primary);">
@@ -24,7 +23,6 @@
             <div class="caption" style="text-align: center;">New Customers (Today)</div>
             <h2 style="text-align: center; margin-top: 0.5rem; color: var(--primary);">{{ customers_today_count }}</h2>
         </div>
-
         <div class="module">
             <div class="caption" style="text-align: center;">Total Revenue</div>
             <h2 style="text-align: center; margin-top: 0.5rem;">₹{{ total_revenue|floatformat:2 }}</h2>
@@ -37,46 +35,76 @@
             <div class="caption" style="text-align: center;">Total Customers</div>
             <h2 style="text-align: center; margin-top: 0.5rem;">{{ total_customers_count }}</h2>
         </div>
-
     </div>
 
-    <!-- Chart Iframe Section -->
-    <div class="module">
-        <h2>Sales Revenue (Last 7 Days)</h2>
-        <iframe src="{% url 'sales_chart_iframe' %}" style="width: 100%; height: 45vh; border: none;"
-            title="Sales Revenue Chart">
-        </iframe>
+    <!-- TABAHAHI BUTTON YAHAN HAI -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="#" id="toggle-chart-btn" class="button">View Sales Analysis</a>
     </div>
 
-    <!-- Recent Orders Table -->
-    <div class="module">
-        <h2>Recent Orders</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col">Order ID</th>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Amount</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in recent_orders %}
-                <tr>
-                    <td><a href="/admin/store/order/{{ order.id }}/change/">#{{ order.id }}</a></td>
-                    <td>{{ order.user.username }}</td>
-                    <td>₹{{ order.total_amount|floatformat:2 }}</td>
-                    <td>{{ order.status }}</td>
-                    <td>{{ order.created_at|date:"d M Y" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" style="text-align: center;">No recent orders found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Chart and Orders Section (Initially Hidden) -->
+    <div id="analysis-section" style="display: none;">
+        <!-- Chart Iframe Section -->
+        <div class="module">
+            <h2>Sales Revenue (Last 7 Days)</h2>
+            <iframe src="{% url 'sales_chart_iframe' %}" style="width: 100%; height: 45vh; border: none;"
+                title="Sales Revenue Chart">
+            </iframe>
+        </div>
+
+        <!-- Recent Orders Table -->
+        <div class="module">
+            <h2>Recent Orders</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Order ID</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><a href="/admin/store/order/{{ order.id }}/change/">#{{ order.id }}</a></td>
+                        <td>{{ order.user.username }}</td>
+                        <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                        <td>{{ order.status }}</td>
+                        <td>{{ order.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No recent orders found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-chart-btn');
+        const analysisSection = document.getElementById('analysis-section');
+
+        if (toggleBtn && analysisSection) {
+            toggleBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (analysisSection.style.display === 'none') {
+                    analysisSection.style.display = 'block';
+                    toggleBtn.textContent = 'Hide Sales Analysis';
+                } else {
+                    analysisSection.style.display = 'none';
+                    toggleBtn.textContent = 'View Sales Analysis';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
