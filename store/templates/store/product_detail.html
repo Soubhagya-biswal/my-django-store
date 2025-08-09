@@ -1,13 +1,10 @@
 {% extends 'store/base.html' %}
 {% load static %}
 
-
 {% block content %}
 <div class="container my-5">
 
-
     {% csrf_token %}
-
 
     {% if messages %}
     {% for message in messages %}
@@ -19,38 +16,33 @@
     {% endif %}
 
     <div class="row">
-
-        <div class="col-md-6">
+        <!-- Product Images -->
+        <div class="col-md-6 mb-4">
             <div class="row">
-                
-                <div class="col-2">
+                <div class="col-12 col-sm-2 mb-3 mb-sm-0">
                     <div class="thumbnail-gallery">
-                        
                         <img src="{{ product.image_url }}" class="img-fluid thumbnail-item active"
                             onclick="changeImage(this)">
-
                         {% for img in product.images.all %}
-                        
                         <img src="{{ img.image_url }}" class="img-fluid thumbnail-item" onclick="changeImage(this)">
                         {% endfor %}
                     </div>
                 </div>
-                
-                <div class="col-10">
+                <div class="col-12 col-sm-10">
                     <div class="zoom-container">
-                        
                         <img src="{{ product.image_url }}" id="main-product-image" class="img-fluid rounded"
                             alt="{{ product.name }}">
                     </div>
                 </div>
             </div>
         </div>
-    
+
+        <!-- Product Details -->
         <div class="col-md-6">
-            <div class="d-flex align-items-center mb-2">
+            <div class="d-flex align-items-center mb-2 flex-wrap">
                 <h1>{{ product.name }}</h1>
                 {% if average_rating %}
-                <span class="badge bg-warning text-dark ms-3">
+                <span class="badge bg-warning text-dark ms-2">
                     ⭐ {{ average_rating }}
                 </span>
                 {% endif %}
@@ -78,7 +70,7 @@
             </div>
             {% endif %}
 
-
+            <!-- Delivery Check -->
             <div class="mt-4">
                 <h5>Check Estimated Delivery Date</h5>
                 <div class="input-group mb-3" style="max-width: 300px;">
@@ -88,43 +80,40 @@
                 <div id="delivery-result"></div>
             </div>
 
-
+            <!-- Stock and Actions -->
             {% if product.stock > 0 %}
             <form action="{% url 'add_to_cart' product_id=product.id %}" method="post"
-                class="d-flex align-items-center mb-3">
+                class="d-flex align-items-center mb-3 flex-wrap">
                 {% csrf_token %}
-                <div class="input-group me-3" style="width: 150px;">
+                <div class="input-group me-3 mb-2" style="width: 150px;">
                     <button class="btn btn-outline-secondary" type="button" id="decrement-btn">-</button>
                     <input type="number" name="quantity" id="product-quantity" class="form-control text-center"
                         value="1" min="1" max="{{ product.stock }}">
                     <button class="btn btn-outline-secondary" type="button" id="increment-btn">+</button>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg">Add to Cart 🛒</button>
+                <button type="submit" class="btn btn-primary btn-lg mb-2">Add to Cart 🛒</button>
             </form>
-
 
             {% if user.is_authenticated %}
             <a href="{% url 'toggle_wishlist' product_id=product.id %}"
-                class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg">
+                class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg mb-2 w-100">
                 {% if is_wishlisted %} ❤️ In Wishlist {% else %} 🤍 Add to Wishlist {% endif %}
             </a>
             <a href="{% url 'toggle_price_notification' product_id=product.id %}"
-                class="btn {% if is_price_subscribed %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-lg mt-2">
+                class="btn {% if is_price_subscribed %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-lg mt-2 w-100">
                 {% if is_price_subscribed %} ✔️ Subscribed to Price Drop {% else %} 🔔 Notify Me of Price Drop
                 {% endif %}
             </a>
             {% endif %}
-
-
             {% else %}
             <p class="text-danger fw-bold h5">Currently Out of Stock</p>
             {% if user.is_authenticated %}
             {% if is_subscribed %}
-            <a href="{% url 'toggle_stock_notification' product_id=product.id %}" class="btn btn-success btn-lg mt-2">✔️
-                Subscribed (Click to Unsubscribe)</a>
+            <a href="{% url 'toggle_stock_notification' product_id=product.id %}"
+                class="btn btn-success btn-lg mt-2 w-100">✔️ Subscribed (Click to Unsubscribe)</a>
             {% else %}
             <a href="{% url 'toggle_stock_notification' product_id=product.id %}"
-                class="btn btn-info btn-lg mt-2">Notify Me When Available</a>
+                class="btn btn-info btn-lg mt-2 w-100">Notify Me When Available</a>
             {% endif %}
             {% else %}
             <p class="mt-3"><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to be notified when this item
@@ -132,15 +121,13 @@
             {% endif %}
             {% endif %}
         </div>
-        
     </div>
 
+    <!-- Reviews Section -->
     <div class="row mt-5">
         <div class="col-md-12">
             <h3 class="mb-4">Customer Reviews</h3>
             <hr>
-
-
             {% if user.is_authenticated %}
             {% if not user_has_reviewed %}
             <div class="card mb-4 shadow-sm">
@@ -168,7 +155,6 @@
                 review.</div>
             {% endif %}
 
-
             {% if reviews %}
             {% for review in reviews %}
             <div class="card mb-3">
@@ -186,12 +172,26 @@
             {% endif %}
         </div>
     </div>
-
 </div>
 
+<!-- AI Chatbot FAB -->
+<div class="ai-chat-fab" id="ai-chat-toggle-btn">🤖</div>
+<div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
+    <div class="ai-chat-header">
+        <span>AI Product Helper</span>
+        <button class="ai-chat-close-btn" id="ai-chat-close-btn">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+        <p>Hi! How can I help you with this product?</p>
+    </div>
+    <div class="ai-chat-input-area">
+        <input type="text" id="ai-chat-input" placeholder="Ask a question...">
+        <button id="ai-chat-send-btn">➤</button>
+    </div>
+</div>
 
+<!-- Scripts -->
 <script>
-    
     function changeImage(element) {
         var mainImage = document.getElementById('main-product-image');
         mainImage.src = element.src;
@@ -205,25 +205,20 @@
     document.getElementById('decrement-btn').addEventListener('click', function () {
         let quantityInput = document.getElementById('product-quantity');
         let currentValue = parseInt(quantityInput.value);
-        if (currentValue > 1) {
-            quantityInput.value = currentValue - 1;
-        }
+        if (currentValue > 1) quantityInput.value = currentValue - 1;
     });
+
     document.getElementById('increment-btn').addEventListener('click', function () {
         let quantityInput = document.getElementById('product-quantity');
         let currentValue = parseInt(quantityInput.value);
         let maxStock = parseInt(quantityInput.max);
-        if (currentValue < maxStock) {
-            quantityInput.value = currentValue + 1;
-        }
+        if (currentValue < maxStock) quantityInput.value = currentValue + 1;
     });
 
     document.getElementById('check-pincode-btn').addEventListener('click', function () {
         const pincode = document.getElementById('pincode-input').value;
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const deliveryResultDiv = document.getElementById('delivery-result');
-
-
         fetch("{% url 'check_delivery' %}", {
                 method: 'POST',
                 headers: {
@@ -232,36 +227,90 @@
                 },
                 body: `pincode=${pincode}`
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.error || 'Server error');
-                    });
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.estimated_date) {
                     deliveryResultDiv.innerHTML =
                         `<p class="text-success">Estimated delivery to ${data.city} by: <b>${data.estimated_date}</b></p>`;
-                } else if (data.error) {
-                    deliveryResultDiv.innerHTML =
-                        `<p class="text-danger">${data.error}</p>`;
                 } else {
                     deliveryResultDiv.innerHTML =
-                        `<p class="text-danger">An unknown error occurred. Please try again.</p>`;
+                        `<p class="text-danger">${data.error || 'An error occurred'}</p>`;
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                deliveryResultDiv.innerHTML =
-                    `<p class="text-danger">${error.message}</p>`;
-            });
+            .catch(() => deliveryResultDiv.innerHTML = `<p class="text-danger">Server error</p>`);
     });
+
+    // AI Chatbot Script
+    const chatWindow = document.getElementById('ai-chat-window');
+    const toggleBtn = document.getElementById('ai-chat-toggle-btn');
+    const closeBtn = document.getElementById('ai-chat-close-btn');
+    const messagesArea = document.getElementById('ai-chat-messages');
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+    const inputBox = document.getElementById('ai-chat-input');
+
+    toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
+    closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
+    sendBtn.addEventListener('click', sendMessage);
+    inputBox.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") sendMessage();
+    });
+
+    function sendMessage() {
+        const question = inputBox.value.trim();
+        if (question === "") return;
+        addMessage(question, 'user');
+        inputBox.value = "";
+        addMessage('...', 'bot', true);
+        const productId = chatWindow.dataset.productId;
+        const url = "{% url 'ask_ai' %}";
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    question: question
+                })
+            })
+            .then(response => response.json())
+            .then(data => updateLastBotMessage(data.answer))
+            .catch(() => updateLastBotMessage('Sorry, something went wrong.'));
+    }
+
+    function addMessage(text, type, isLoading = false) {
+        const p = document.createElement('p');
+        p.textContent = text;
+        p.className = `${type}-message`;
+        if (isLoading) p.id = 'loading-message';
+        messagesArea.appendChild(p);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function updateLastBotMessage(text) {
+        const loadingMessage = document.getElementById('loading-message');
+        if (loadingMessage) {
+            loadingMessage.textContent = text;
+            loadingMessage.id = '';
+        }
+    }
 </script>
 
+<!-- Styles -->
 <style>
-    
+    .thumbnail-gallery {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .thumbnail-item.active {
+        border: 2px solid #007bff;
+    }
+
     .ai-chat-fab {
         position: fixed;
         bottom: 25px;
@@ -342,6 +391,17 @@
         align-self: flex-start;
     }
 
+    .user-message {
+        align-self: flex-end;
+        background-color: #007bff;
+        color: white;
+    }
+
+    .bot-message {
+        align-self: flex-start;
+        background-color: #e9e9eb;
+    }
+
     .ai-chat-input-area {
         display: flex;
         padding: 10px;
@@ -372,110 +432,48 @@
     .ai-chat-input-area button:hover {
         background-color: #0056b3;
     }
+
+    /* Mobile responsive tweaks */
+    @media (max-width: 768px) {
+        .thumbnail-gallery {
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 10px;
+        }
+
+        .thumbnail-item {
+            flex: 0 0 auto;
+            max-width: 70px;
+            cursor: pointer;
+        }
+
+        form.d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 10px;
+        }
+
+        form.d-flex .input-group {
+            width: 100% !important;
+        }
+
+        form.d-flex button,
+        .btn-lg {
+            width: 100%;
+        }
+
+        .ai-chat-window {
+            width: 90%;
+            height: 70%;
+            right: 5%;
+            bottom: 80px;
+        }
+
+        .ai-chat-fab {
+            width: 50px;
+            height: 50px;
+            font-size: 22px;
+        }
+    }
 </style>
-
-<div class="ai-chat-fab" id="ai-chat-toggle-btn">
-    🤖
-</div>
-
-<div class="ai-chat-window" id="ai-chat-window" data-product-id="{{ product.id }}">
-    <div class="ai-chat-header">
-        <span>AI Product Helper</span>
-        <button class="ai-chat-close-btn" id="ai-chat-close-btn">&times;</button>
-    </div>
-    <div class="ai-chat-messages" id="ai-chat-messages">
-        <p>Hi! How can I help you with this product?</p>
-    </div>
-    <div class="ai-chat-input-area">
-        <input type="text" id="ai-chat-input" placeholder="Ask a question...">
-        <button id="ai-chat-send-btn">➤</button>
-    </div>
-</div>
-<script>
-    const chatWindow = document.getElementById('ai-chat-window');
-    const toggleBtn = document.getElementById('ai-chat-toggle-btn');
-    const closeBtn = document.getElementById('ai-chat-close-btn');
-    const messagesArea = document.getElementById('ai-chat-messages');
-    const sendBtn = document.getElementById('ai-chat-send-btn');
-    const inputBox = document.getElementById('ai-chat-input');
-
-    
-    toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
-    closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
-    sendBtn.addEventListener('click', sendMessage);
-    inputBox.addEventListener('keyup', function (event) {
-        if (event.key === "Enter") {
-            sendMessage();
-        }
-    });
-
-    function sendMessage() {
-        const question = inputBox.value.trim();
-        if (question === "") {
-            return; 
-        }
-        addMessage(question, 'user');
-        inputBox.value = ""; 
-
-        
-        addMessage('...', 'bot', true);
-        const productId = chatWindow.dataset.productId;
-        const url = "{% url 'ask_ai' %}"; 
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    question: question
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateLastBotMessage(data.answer);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                updateLastBotMessage('Sorry, something went wrong. Please try again.');
-            });
-    }
-
-    function addMessage(text, type, isLoading = false) {
-        const p = document.createElement('p');
-        p.textContent = text;
-        p.className = `message ${type}-message`;
-        if (isLoading) {
-            p.id = 'loading-message';
-        }
-        messagesArea.appendChild(p);
-        messagesArea.scrollTop = messagesArea.scrollHeight; 
-    }
-
-    function updateLastBotMessage(text) {
-        const loadingMessage = document.getElementById('loading-message');
-        if (loadingMessage) {
-            loadingMessage.textContent = text;
-            loadingMessage.id = ''; 
-        }
-    }
-
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = `
-        .user-message { 
-            align-self: flex-end; 
-            background-color: #007bff; 
-            color: white; 
-        }
-        .bot-message {
-            align-self: flex-start;
-            background-color: #e9e9eb;
-        }
-    `;
-    document.head.appendChild(styleSheet);
-</script>
-
 {% endblock %}
