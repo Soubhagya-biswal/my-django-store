@@ -32,6 +32,8 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 import json
 import google.generativeai as genai
 import os
+from django.urls import reverse
+
 
 def get_estimated_delivery_date(pincode):
     today = datetime.date.today()
@@ -452,6 +454,7 @@ def start_payment(request):
     address_id = request.session.get('address_id')
     if not address_id:
         return redirect('checkout_address')
+    
     shipping_address = get_object_or_404(Address, id=address_id, user=request.user)
     cart = get_object_or_404(Cart, user=request.user)
     cart_items = cart.items.all()
@@ -460,8 +463,8 @@ def start_payment(request):
 
     total_price = sum(item.product.price * item.quantity for item in cart_items)
     final_price = total_price
-
     coupon_id = request.session.get('coupon_id')
+
     if coupon_id:
         try:
             coupon = Coupon.objects.get(id=coupon_id)
@@ -473,7 +476,7 @@ def start_payment(request):
             return redirect('view_cart')
 
     amount_in_paise = int(final_price * 100)
-    
+
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
     razorpay_order_data = {
         "amount": amount_in_paise,
@@ -481,8 +484,9 @@ def start_payment(request):
         "receipt": f"order_rcptid_{cart.id}"
     }
     razorpay_order = client.order.create(data=razorpay_order_data)
-    delivery_date, _ = get_estimated_delivery_date(shipping_address.postal_code)
 
+    delivery_date, _ = get_estimated_delivery_date(shipping_address.postal_code)
+    
     order = Order.objects.create(
         user=request.user,
         shipping_address=shipping_address,
@@ -501,6 +505,7 @@ def start_payment(request):
             quantity=item.quantity,
             price=item.product.price
         )
+    callback_url = request.build_absolute_uri(reverse('payment_success'))
 
     context = {
         'razorpay_order_id': razorpay_order['id'],
@@ -508,9 +513,11 @@ def start_payment(request):
         'razorpay_amount': amount_in_paise,
         'currency': 'INR',
         'order': order,
-        'callback_url': 'http://127.0.0.1:8000/payment-success/'
+        'callback_url': callback_url  
     }
+
     return render(request, 'store/payment.html', context)
+
 
 @csrf_exempt
 def payment_success(request):
