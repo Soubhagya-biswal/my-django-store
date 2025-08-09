@@ -1,0 +1,12 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content_title %}
+{{ block.super }}
+<div style="margin-top: 20px; margin-bottom: 10px;">
+    <a href="{% url 'admin_dashboard' %}" class="button"
+        style="background-color: var(--button-bg); color: var(--button-fg);">
+        Go to MyShop Sales Dashboard
+    </a>
+</div>
+{% endblock %}
