@@ -1,14 +1,48 @@
-<!DOCTYPE html>
-<html>
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Head section for CSS and external libraries -->
 
 <head>
-    <title>Account Activated</title>
+    <!-- Icon ke liye Font Awesome ki library (internet chahiye) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        .icon-container {
+            font-size: 4rem;
+            /* Icon ko bada karne ke liye */
+            color: #198754;
+            /* Bootstrap ka success green color */
+        }
+    </style>
 </head>
 
-<body>
-    <h1>Your account has been successfully activated!</h1>
-    <p>You can now log in with your credentials.</p>
-    <a href="{% url 'login' %}">Go to Login Page</a>
-</body>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-lg text-center border-0">
+                <div class="card-body p-5">
 
-</html>
+                    <!-- Bada sa Success Icon -->
+                    <div class="icon-container mb-4">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+
+                    <h1 class="card-title fw-bold">Account Activated!</h1>
+                    <p class="lead text-muted mt-3">
+                        Congratulations! Your account has been successfully verified.
+                    </p>
+                    <p>
+                        You can now log in using your credentials and start shopping.
+                    </p>
+
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg mt-4">Go to Login Page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

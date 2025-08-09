@@ -1,48 +1,65 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    image = models.ImageField(upload_to='category_icons/')
+    image_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name="Category Image URL")
 
     class Meta:
         verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
-    
+
 class Product(models.Model):
     name = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    old_price = models.DecimalField("Market Price", max_digits=10, decimal_places=2, null=True, blank=True)
     market_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     is_best_deal = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
     highlights = models.TextField(blank=True, null=True, help_text="Enter each highlight on a new line.")
-    image = models.ImageField(upload_to='products/')
+    image_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name="Main Product Image URL")
     stock = models.PositiveIntegerField(default=0)
+    
+    related_products = models.ManyToManyField(
+        'self', 
+        blank=True, 
+        symmetrical=False,
+        verbose_name="Related Products (for 'Complete the Look')",
+        help_text="Select products that go well with this item."
+    )
+    
     def __str__(self):
         return self.name
-    
+
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='product_gallery/')
+    image_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name="Gallery Image URL")
 
     def __str__(self):
         return f"Image for {self.product.name}"
+
 
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
     def __str__(self):
         return f"Cart of {self.user.username}"
+
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name}"
@@ -51,8 +68,10 @@ class StockNotification(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
     class Meta:
         unique_together = ('user', 'product')
+
 
     def __str__(self):
         return f"{self.user.username} wants {self.product.name}"
@@ -61,8 +80,10 @@ class Wishlist(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
 
+
     class Meta:
         unique_together = ('user', 'product')
+
 
     def __str__(self):
         return f"{self.product.name} in {self.user.username}'s wishlist"
@@ -71,12 +92,14 @@ class PriceDropNotification(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
     class Meta:
         unique_together = ('user', 'product')
 
+
     def __str__(self):
         return f"{self.user.username} wants price drop for {self.product.name}"
-   
+
 ORDER_STATUS_CHOICES = [
     ('Pending', 'Pending'),
     ('Processing', 'Processing'),
@@ -106,16 +129,21 @@ class Order(models.Model):
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     estimated_delivery_date = models.DateField(null=True, blank=True)
+
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name}"
@@ -128,6 +156,7 @@ class Address(models.Model):
     country = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15)
 
+
     def __str__(self):
         return f"{self.street_address}, {self.city}, {self.user.username}"
 CANCELLATION_STATUS_CHOICES = [
@@ -136,11 +165,13 @@ CANCELLATION_STATUS_CHOICES = [
     ('Rejected', 'Rejected'),
 ]
 
+
 class CancellationRequest(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=CANCELLATION_STATUS_CHOICES, default='Pending')
     requested_at = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return f"Cancellation request for Order #{self.order.id}"
@@ -149,6 +180,10 @@ RETURN_STATUS_CHOICES = [
     ('Approved', 'Approved'),
     ('Rejected', 'Rejected'),
 ]
+REFUND_METHOD_CHOICES = [
+    ('Original', 'Refund to Original Payment Method'),
+    ('Bank', 'Refund to Bank Account'),
+]
 
 class ReturnRequest(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='return_request')
@@ -156,8 +191,21 @@ class ReturnRequest(models.Model):
     status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='Pending')
     requested_at = models.DateTimeField(auto_now_add=True)
 
+   
+    refund_method = models.CharField(max_length=20, choices=REFUND_METHOD_CHOICES, null=True, blank=True)
+    
+    
+    account_holder_name = models.CharField(max_length=255, null=True, blank=True, verbose_name="Account Holder Name")
+    bank_account_number = models.CharField(max_length=50, null=True, blank=True, verbose_name="Bank Account Number")
+    ifsc_code = models.CharField(max_length=20, null=True, blank=True, verbose_name="IFSC Code")
+    
+    
+    admin_comment = models.TextField(null=True, blank=True, help_text="Internal notes for this return.")
+    refund_processed = models.BooleanField(default=False)
+
     def __str__(self):
         return f"Return request for Order #{self.order.id} - {self.status}"
+
 class Review(models.Model):
     RATING_CHOICES = [
         (1, '1 - Poor'),
@@ -177,3 +225,21 @@ class Review(models.Model):
     
     def __str__(self):
         return f"Review by {self.user.username} for {self.product.name}"
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True, help_text="The coupon code customers will enter (e.g., 'SALE50').")
+    display_name = models.CharField(max_length=100, help_text="Text to display on the homepage deal (e.g., 'Special Diwali Offer').")
+    valid_from = models.DateTimeField(help_text="The date and time from which the coupon is valid.")
+    valid_to = models.DateTimeField(help_text="The date and time until which the coupon is valid.")
+    discount_percent = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Discount percentage (e.g., 15 for 15%)."
+    )
+    active = models.BooleanField(default=True, help_text="Is the coupon currently active?")
+    show_on_homepage = models.BooleanField(default=False, help_text="Check this to show the coupon deal on the homepage.")
+
+    class Meta:
+        ordering = ['-valid_to'] 
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percent}%)"

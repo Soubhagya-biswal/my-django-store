@@ -1,0 +1,39 @@
+<!-- templates/store/emails/refund_processed_email.html -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Refund Processed for Your Order</title>
+</head>
+
+<body style="font-family: sans-serif; line-height: 1.6;">
+    <p>Hi {{ order.user.first_name|default:order.user.username }},</p>
+
+    <p>This is to confirm that the refund for your return request regarding <strong>Order #{{ order.id }}</strong> has
+        been processed successfully.</p>
+
+    <p><strong>Refund Details:</strong></p>
+    <ul>
+        <li><strong>Order ID:</strong> #{{ order.id }}</li>
+        <li><strong>Refund Amount:</strong> ₹{{ order.total_amount }}</li>
+        <li><strong>Refund Method:</strong>
+            {% if return_request.refund_method == 'Original' %}
+            To your original payment method (Razorpay)
+            {% else %}
+            To the bank account you provided
+            {% endif %}
+        </li>
+    </ul>
+
+    {% if return_request.refund_method == 'Original' %}
+    <p>The amount should reflect in your account within 5-7 business days, depending on your bank's processing time.</p>
+    {% else %}
+    <p>The amount has been transferred and should reflect in your bank account shortly.</p>
+    {% endif %}
+
+    <p>Thank you for shopping with us!</p>
+    <p>Best regards,<br>Your Store Team</p>
+</body>
+
+</html>

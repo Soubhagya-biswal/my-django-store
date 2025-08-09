@@ -1,44 +1,77 @@
 {% extends 'store/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
+
+<!-- Head section for CSS and external libraries -->
+
+<head>
+    <!-- Eye icon ke liye Font Awesome ki library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* Yeh CSS eye icon ko password box ke andar rakhega */
+        .password-container {
+            position: relative;
+        }
+
+        .password-container .toggle-password-icon {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+
+<div class="row justify-content-center mt-5 mb-5">
     <div class="col-md-6 col-lg-5">
         <div class="card shadow">
             <div class="card-body">
                 <h2 class="card-title text-center mb-4">Create an Account 📝</h2>
 
-                <!-- START: Add this code here -->
+                <!-- Sabhi tarah ke errors yahan dikhayein -->
                 {% if messages %}
                 {% for message in messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{ message }}
-                </div>
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
                 {% endfor %}
                 {% endif %}
-                <!-- END: Add this code here -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+
 
                 <form method="post">
                     {% csrf_token %}
 
+                    <!-- YEH NAYA AUR SMART LOOP HAI -->
                     {% for field in form %}
                     <div class="mb-3">
                         <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}"
-                            id="{{ field.id_for_label }}" class="form-control" required>
 
-                        {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text|safe }}</div>
+                        {% if field.field.widget.input_type == 'password' %}
+                        <!-- Agar field password hai, toh special container banayein -->
+                        <div class="password-container">
+                            {% render_field field class="form-control" %}
+                            <i class="fa-solid fa-eye toggle-password-icon"></i>
+                        </div>
+                        {% else %}
+                        <!-- Agar normal field hai, toh seedhe render karein -->
+                        {% render_field field class="form-control" %}
                         {% endif %}
 
-                        {% for error in field.errors %}
-                        <div class="alert alert-danger p-1 mt-1" role="alert">
-                            {{ error }}
-                        </div>
-                        {% endfor %}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     {% endfor %}
 
-                    <div class="d-grid">
+                    <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary">Sign Up</button>
                     </div>
                 </form>
@@ -49,4 +82,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Yeh JavaScript code ab zaroor kaam karega
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleIcons = document.querySelectorAll('.toggle-password-icon');
+
+        toggleIcons.forEach(icon => {
+            icon.addEventListener('click', function () {
+                const passwordContainer = this.parentElement;
+                const passwordField = passwordContainer.querySelector('input');
+
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' :
+                    'password';
+                passwordField.setAttribute('type', type);
+
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+    });
+</script>
+
 {% endblock %}

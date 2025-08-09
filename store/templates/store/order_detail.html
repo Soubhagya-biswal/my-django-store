@@ -1,4 +1,6 @@
 {% extends 'store/base.html' %}
+{% load static %}
+
 
 {% block content %}
 <style>
@@ -8,6 +10,7 @@
         padding-left: 50px;
     }
 
+
     .timeline-item {
         position: relative;
         padding-bottom: 30px;
@@ -15,10 +18,12 @@
         border-left: 2px solid #e9ecef;
     }
 
+
     .timeline-item:last-child {
         border-left: none;
         padding-bottom: 0;
     }
+
 
     .timeline-icon {
         position: absolute;
@@ -35,25 +40,30 @@
         color: #fff;
     }
 
+
     .timeline-item.completed .timeline-icon {
         background-color: #198754;
         /* Green for completed */
     }
+
 
     .timeline-item.active .timeline-icon {
         background-color: #0d6efd;
         /* Blue for active */
     }
 
+
     .timeline-item.cancelled .timeline-icon {
         background-color: #dc3545;
         /* Red for cancelled */
     }
 
+
     .timeline-item.completed {
         border-left: 2px solid #198754;
     }
 </style>
+
 
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -71,8 +81,10 @@
         </div>
     </div>
 
+
     <div class="card shadow-sm">
         <div class="card-body">
+
 
             <div class="mb-5">
                 <h5 class="mb-4">Order Status</h5>
@@ -125,7 +137,9 @@
                 {% endwith %}
             </div>
 
+
             <hr>
+
 
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
@@ -149,6 +163,7 @@
                             <h5 class="card-title"><i class="fas fa-money-bill-wave me-2 text-success"></i>Payment
                                 Information</h5>
 
+
                             <p class="mb-1">
                                 <strong>Method:</strong>
                                 {% if order.payment_mode == 'Razorpay' %}
@@ -157,6 +172,7 @@
                                 Cash on Delivery
                                 {% endif %}
                             </p>
+
 
                             <p class="mb-1">
                                 <strong>Status:</strong>
@@ -169,6 +185,7 @@
                                 {% endif %}
                             </p>
 
+
                             <hr>
                             <h5 class="mb-0">Total: ₹{{ order.total_amount }}</h5>
                         </div>
@@ -176,12 +193,14 @@
                 </div>
             </div>
 
+
             <div>
                 <h5 class="mb-3">Order Items ({{ order.items.all.count }})</h5>
                 <ul class="list-group list-group-flush">
                     {% for item in order.items.all %}
                     <li class="list-group-item d-flex align-items-center">
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
+                        <!-- YEH LINE BADAL GAYI HAI -->
+                        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}"
                             class="img-fluid rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
                         <div class="flex-grow-1">
                             <a href="#" class="fw-bold text-dark text-decoration-none">{{ item.product.name }}</a>
@@ -193,16 +212,58 @@
                 </ul>
             </div>
 
+
             <div class="text-center mt-4 pt-3 border-top">
+                
                 {% if order.status == 'Pending' or order.status == 'Processing' %}
-                <a href="{% url 'request_cancellation' order_id=order.id %}" class="btn btn-warning">Request
-                    Cancellation</a>
+
+                {% if has_existing_cancellation_request %}
+                
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading mb-1">Cancellation Request Submitted</h5>
+                    <p class="mb-0">Your request to cancel this order is being processed.</p>
+                </div>
+                {% else %}
+                
+                <a href="{% url 'request_cancellation' order.id %}" class="btn btn-warning">Request Cancellation</a>
                 {% endif %}
 
-                {% if order.status == 'Delivered' and order.payment_status == 'Paid' and not order.return_request %}
-                <a href="{% url 'request_return' order_id=order.id %}" class="btn btn-danger">Request Return</a>
                 {% endif %}
+
+
+                {% if order.status == 'Delivered' %}
+                <div class="text-center mt-4 pt-3 border-top">
+
+                    {% if has_existing_return_request %}
+
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading mb-1">Return Request Submitted</h5>
+                        <p class="mb-0">Your request to return this item is being processed. We will notify you of any
+                            updates.</p>
+                    </div>
+
+                    {% elif is_return_eligible %}
+
+                    <a href="{% url 'request_return' order.id %}" class="btn btn-danger">Request Return</a>
+                    {% if return_deadline %}
+                    <p class="text-muted small mt-2">
+                        You can return this item until <strong>{{ return_deadline|date:"d M Y" }}</strong>.
+                    </p>
+                    {% endif %}
+
+                    {% elif return_window_expired %}
+
+                    <button class="btn btn-secondary" disabled>Return Period Expired</button>
+                    <p class="text-muted small mt-2">
+                        The 7-day return window for this order has closed.
+                    </p>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+
             </div>
+
 
         </div>
     </div>

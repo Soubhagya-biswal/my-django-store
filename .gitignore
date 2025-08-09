@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+venv/
+.env
+
+# Database
+db.sqlite3
+
+# Static & Media files
+/static_root/
+/media/
+
+# AI Data
+/ai_data/

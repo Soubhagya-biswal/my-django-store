@@ -13,6 +13,7 @@
         <p>This is to confirm that your cancellation request for order #{{ order.id }} has been approved. Your order has
             been successfully cancelled.</p>
 
+        <!-- Refund ki jaankari (sirf agar refund hua hai toh) -->
         {% if refund_processed %}
         <div style="background-color: #f0f8ff; border-left: 4px solid #4682B4; padding: 15px; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #4682B4;">Refund Processed</h3>
@@ -41,9 +42,15 @@
             </tbody>
         </table>
 
-        <p style="margin-top: 20px;">We are sorry for any inconvenience this may have caused. hence this was a cod order
-            so no refund needed We hope to serve you again
+        <!-- Ab yeh message condition ke hisaab se dikhega -->
+        {% if refund_processed %}
+        <p style="margin-top: 20px;">We are sorry for any inconvenience this may have caused. We hope to serve you again
             soon!</p>
+        {% else %}
+        <p style="margin-top: 20px;">As this was a Cash on Delivery (COD) order, no payment was made, and therefore no
+            refund is required. We are sorry for any inconvenience and hope to serve you again soon!</p>
+        {% endif %}
+
         <p>Thanks,<br>The MyShop Team</p>
     </div>
 </body>

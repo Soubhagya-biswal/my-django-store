@@ -1,18 +1,79 @@
 {% extends 'store/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h2 class="card-title">Choose Payment Method</h2>
-                    <p class="text-muted">Your total amount is ₹{{ total_price }}</p>
-                    <hr>
-                    <div class="d-grid gap-3">
-                        <a href="{% url 'start_payment' %}" class="btn btn-success btn-lg">Pay Online with Razorpay</a>
-                        <a href="{% url 'place_cod_order' %}" class="btn btn-secondary btn-lg">Cash on Delivery
-                            (COD)</a>
+        <div class="col-lg-10">
+            <h2 class="mb-4 text-center">Confirm Your Order & Pay</h2>
+
+            <div class="row g-4">
+                <!-- Left Column: Order Summary -->
+                <div class="col-md-7">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <!-- Order Items List -->
+                                {% for item in cart_items %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        {{ item.product.name }}
+                                        <small class="d-block text-muted">Quantity: {{ item.quantity }}</small>
+                                    </div>
+                                    <!-- Using widthratio to calculate subtotal for each item -->
+                                    <span>₹{% widthratio item.product.price 1 item.quantity as subtotal %}{{ subtotal|floatformat:2 }}</span>
+                                </li>
+                                {% endfor %}
+
+                                <!-- Price Calculation -->
+                                <li
+                                    class="list-group-item d-flex justify-content-between align-items-center px-0 border-top pt-3">
+                                    Subtotal
+                                    <span>₹{{ total_price|floatformat:2 }}</span>
+                                </li>
+
+                                {% if coupon %}
+                                <li
+                                    class="list-group-item d-flex justify-content-between align-items-center px-0 text-success">
+                                    <span>
+                                        Discount Applied
+                                        <small class="d-block text-muted">({{ coupon.code }})</small>
+                                    </span>
+                                    <span class="fw-bold">- ₹{{ discount_amount|floatformat:2 }}</span>
+                                </li>
+                                {% endif %}
+
+                                <li
+                                    class="list-group-item d-flex justify-content-between align-items-center px-0 fw-bold fs-5 border-top pt-3">
+                                    Grand Total (To Pay)
+                                    <span>₹{{ final_price|floatformat:2 }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Payment Method -->
+                <div class="col-md-5">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Choose Payment Method</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <p class="text-muted">Your final payable amount is:</p>
+                            <h3 class="mb-4"><strong>₹{{ final_price|floatformat:2 }}</strong></h3>
+                            <div class="d-grid gap-3">
+                                <a href="{% url 'start_payment' %}" class="btn btn-success btn-lg">
+                                    Pay Online with Razorpay
+                                </a>
+                                <a href="{% url 'place_cod_order' %}" class="btn btn-secondary btn-lg">
+                                    Cash on Delivery (COD)
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

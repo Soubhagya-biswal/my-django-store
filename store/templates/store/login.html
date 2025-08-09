@@ -1,6 +1,35 @@
 {% extends 'store/base.html' %}
+{% load static %}
 
 {% block content %}
+
+
+
+<head>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        
+        .password-container {
+            position: relative;
+        }
+
+        
+        .password-container .fa-eye,
+        .password-container .fa-eye-slash {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            
+        }
+    </style>
+</head>
+
+
 <div class="row justify-content-center mt-5">
     <div class="col-md-6 col-lg-4">
         <div class="card shadow">
@@ -9,14 +38,19 @@
                 <form method="post">
                     {% csrf_token %}
 
+                    
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Username</label>
                         <input type="text" name="username" class="form-control" id="id_username" required>
                     </div>
 
+                    
                     <div class="mb-3">
                         <label for="id_password" class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" id="id_password" required>
+                        <div class="password-container">
+                            <input type="password" name="password" class="form-control" id="id_password" required>
+                            <i class="fa-solid fa-eye" id="togglePassword"></i>
+                        </div>
                     </div>
 
                     {% if form.errors %}
@@ -38,4 +72,22 @@
         </div>
     </div>
 </div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#id_password');
+
+        togglePassword.addEventListener('click', function (e) {
+            
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+
+            
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
+</script>
+
 {% endblock %}

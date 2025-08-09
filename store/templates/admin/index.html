@@ -1,0 +1,9 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content_title %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <span>{{ title }}</span>
+    <a href="{% url 'admin_dashboard' %}" class="button">View Sales Dashboard</a>
+</div>
+{% endblock %}

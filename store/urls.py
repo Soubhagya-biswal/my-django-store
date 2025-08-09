@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.homepage, name='homepage'),
+    path('sales-chart-iframe/', views.sales_chart_iframe, name='sales_chart_iframe'),
     path('signup/', views.signup, name='signup'),
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('login/', views.login_view, name='login'),
@@ -11,9 +12,12 @@ urlpatterns = [
     
     path('logout/', views.logout_request, name='logout'),
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('ask-ai/', views.ask_ai_buddy, name='ask_ai'),
     path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('checkout/address/', views.checkout_address, name='checkout_address'),
     path('cart/', views.view_cart, name='view_cart'),
+    path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
+    path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
     path('checkout/', views.checkout, name='checkout'),
     path('start-payment/', views.start_payment, name='start_payment'),
     path('place-cod-order/', views.place_cod_order, name='place_cod_order'),
@@ -29,6 +33,7 @@ urlpatterns = [
     path('request-cancellation/<int:order_id>/', views.request_cancellation, name='request_cancellation'),
     path('request-return/<int:order_id>/', views.request_return, name='request_return'),
     path('profile/', views.profile, name='profile'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
     path('my-reviews/', views.my_reviews, name='my_reviews'),
     path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),

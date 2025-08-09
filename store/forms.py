@@ -22,13 +22,28 @@ class CancellationReasonForm(forms.ModelForm):
         }
 from .models import ReturnRequest
 
-class ReturnReasonForm(forms.ModelForm):
+
+
+class ReturnRequestForm(forms.ModelForm):
     class Meta:
         model = ReturnRequest
-        fields = ['reason']
+        
+        fields = [
+            'reason', 
+            'refund_method', 
+            'account_holder_name', 
+            'bank_account_number', 
+            'ifsc_code'
+        ]
+       
         widgets = {
-            'reason': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Please provide a reason for the return...'}),
+            'reason': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Please provide a detailed reason for the return...'}),
+            'refund_method': forms.RadioSelect(), 
+            'account_holder_name': forms.TextInput(attrs={'placeholder': "Account Holder's Name"}),
+            'bank_account_number': forms.TextInput(attrs={'placeholder': 'Your Bank Account Number'}),
+            'ifsc_code': forms.TextInput(attrs={'placeholder': 'Your Bank IFSC Code'}),
         }
+
 from .models import Review
 
 class ReviewForm(forms.ModelForm):
@@ -43,3 +58,12 @@ class UserProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
+        
+class CouponApplyForm(forms.Form):
+    code = forms.CharField(
+        label="",  
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Enter Coupon Code'
+        })
+    )

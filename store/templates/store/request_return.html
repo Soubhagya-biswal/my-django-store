@@ -1,21 +1,129 @@
 {% extends 'store/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container my-5">
     <div class="card shadow-sm">
         <div class="card-header bg-light">
-            <h2 class="mb-0">Request Order Return</h2>
+            <h2 class="mb-0">Request a Return for Order #{{ order.id }}</h2>
         </div>
         <div class="card-body">
-            <h4 class="card-title mb-4">Order #{{ order.id }}</h4>
-            <p class="card-text">Please provide a reason for returning your order.</p>
-            <form method="post">
+            <p class="lead">We're sorry you want to return your order. Please fill the form below to begin.</p>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" id="return-form" novalidate>
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary mt-3">Submit Return Request</button>
-                <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary mt-3">Cancel</a>
+
+                <div class="mb-4">
+                    <label for="{{ form.reason.id_for_label }}" class="form-label fw-bold">1. Reason for Return</label>
+                    <textarea name="{{ form.reason.name }}" class="form-control" rows="4"
+                        placeholder="Please provide a detailed reason for the return..." required
+                        id="{{ form.reason.id_for_label }}">{{ form.reason.value|default_if_none:'' }}</textarea>
+                </div>
+
+                <!-- Step 2: Refund Method -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">2. How would you like your refund?</label>
+
+                    {% if order.payment_mode == 'Razorpay' %}
+                    <!-- Agar Online Payment hai, toh options dikhayein -->
+                    <div id="id_refund_method">
+                        <div class="form-check mb-2 p-3 border rounded">
+                            <input type="radio" name="refund_method" value="Original" class="form-check-input"
+                                id="id_refund_method_0" required>
+                            <label class="form-check-label" for="id_refund_method_0">
+                                <strong>Refund to Original Payment Method</strong>
+                                <small class="d-block text-muted">Fastest and recommended. Amount will be credited to
+                                    the source account/card.</small>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 border rounded">
+                            <input type="radio" name="refund_method" value="Bank" class="form-check-input"
+                                id="id_refund_method_1" required>
+                            <label class="form-check-label" for="id_refund_method_1">
+                                <strong>Refund to a different Bank Account</strong>
+                                <small class="d-block text-muted">Please provide your bank details below. This may take
+                                    longer.</small>
+                            </label>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Agar COD hai, toh sirf bank refund ka option hai -->
+                    <div class="alert alert-info">
+                        For Cash on Delivery orders, the refund will be processed to the bank account you provide below.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Step 3: Bank Details (shuru mein chhupe honge) -->
+                <div id="bank-details-section" class="card card-body bg-light mb-4" style="display: none;">
+                    <h5 class="mb-3">Bank Account Details for Refund</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.account_holder_name.id_for_label }}" class="form-label">Account Holder's
+                                Name</label>
+                            <input type="text" name="{{ form.account_holder_name.name }}" class="form-control"
+                                placeholder="Account Holder's Name" id="{{ form.account_holder_name.id_for_label }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.bank_account_number.id_for_label }}" class="form-label">Bank Account
+                                Number</label>
+                            <input type="text" name="{{ form.bank_account_number.name }}" class="form-control"
+                                placeholder="Your Bank Account Number" id="{{ form.bank_account_number.id_for_label }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.ifsc_code.id_for_label }}" class="form-label">IFSC Code</label>
+                            <input type="text" name="{{ form.ifsc_code.name }}" class="form-control"
+                                placeholder="Your Bank IFSC Code" id="{{ form.ifsc_code.id_for_label }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Submit Return Request</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentMode = "{{ order.payment_mode|escapejs }}";
+        const bankDetailsSection = document.getElementById('bank-details-section');
+        const bankInputs = bankDetailsSection.querySelectorAll('input');
+
+        function setBankInputsRequired(isRequired) {
+            bankInputs.forEach(input => {
+                input.required = isRequired;
+            });
+        }
+
+        // Agar COD order hai, toh bank details hamesha dikhayein aur zaroori banayein
+        if (paymentMode === 'COD') {
+            bankDetailsSection.style.display = 'block';
+            setBankInputsRequired(true);
+        }
+
+        // Agar Razorpay order hai, toh user ke choice par bank details dikhayein/chhupayein
+        const refundMethodRadios = document.querySelectorAll('input[name="refund_method"]');
+        refundMethodRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.value === 'Bank') {
+                    bankDetailsSection.style.display = 'block';
+                    setBankInputsRequired(true);
+                } else {
+                    bankDetailsSection.style.display = 'none';
+                    setBankInputsRequired(false);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Chart</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- YEH HAI HUMARA SPECIAL, SEALED ENVELOPE -->
+    {{ chart_labels|json_script:"chart-labels-data" }}
+    {{ chart_data|json_script:"chart-data-data" }}
+
+    <div class="chart-container">
+        <canvas id="mySalesChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Yahan hum sealed envelope ko khol rahe hain
+        const chartLabels = JSON.parse(document.getElementById('chart-labels-data').textContent);
+        const chartData = JSON.parse(document.getElementById('chart-data-data').textContent);
+
+        let isDarkMode = false;
+        try {
+            isDarkMode = window.parent.document.body.classList.contains('theme-dark');
+        } catch (e) {
+            isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : '#666';
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const primaryColor = isDarkMode ? '#79aec8' : '#447e9b';
+        const primaryBgColor = isDarkMode ? 'rgba(121, 174, 200, 0.1)' : 'rgba(68, 126, 155, 0.1)';
+
+        const ctx = document.getElementById('mySalesChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: chartData,
+                    fill: true,
+                    borderColor: primaryColor,
+                    backgroundColor: primaryBgColor,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: textColor,
+                            callback: function (v) {
+                                return '₹' + v;
+                            }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

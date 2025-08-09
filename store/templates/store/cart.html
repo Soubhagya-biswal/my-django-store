@@ -1,67 +1,120 @@
 {% extends 'store/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container my-5">
     <h1 class="mb-4">Your Shopping Cart 🛒</h1>
 
     {% if not cart_items %}
-    <div class="alert alert-info" role="alert">
-        Your cart is empty. <a href="{% url 'homepage' %}" class="alert-link">Continue Shopping</a>.
+    <div class="alert alert-info text-center py-5 shadow-sm">
+        <h4 class="alert-heading">Your cart is empty!</h4>
+        <p>Looks like you haven't added anything to your cart yet.</p>
+        <hr>
+        <a href="{% url 'homepage' %}" class="btn btn-primary">Let's Go Shopping</a>
     </div>
     {% else %}
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col"></th>
-                    <th scope="col" class="text-center">Quantity</th>
-                    <th scope="col" class="text-end">Price</th>
-                    <th scope="col" class="text-end">Total</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                <tr>
-                    <td>
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
-                            style="width: 75px; height: 75px; object-fit: cover;" class="rounded">
-                    </td>
-                    <td>{{ item.product.name }}</td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <a href="{% url 'decrement_cart_item' item_id=item.id %}"
-                                class="btn btn-outline-secondary btn-sm">-</a>
-                            <span class="mx-3">{{ item.quantity }}</span>
-                            <a href="{% url 'increment_cart_item' item_id=item.id %}"
-                                class="btn btn-outline-secondary btn-sm">+</a>
-                        </div>
-                    </td>
-                    <td class="text-end">₹{{ item.product.price }}</td>
-                    <td class="text-end">₹{% widthratio item.product.price 1 item.quantity %}</td>
-                    <td>
-                        <a href="{% url 'remove_from_cart' item_id=item.id %}"
-                            class="btn btn-outline-danger btn-sm">Remove</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr class="table-light">
-                    <th colspan="5" class="text-end">
-                        <h4>Grand Total:</h4>
-                    </th>
-                    <th class="text-end">
-                        <h4>₹{{ total_price }}</h4>
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
+    <div class="row g-4">
+        <!-- Left Column: Cart Items Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" colspan="2" class="ps-3">Product</th>
+                                    <th scope="col" class="text-center">Quantity</th>
+                                    <th scope="col" class="text-end">Price</th>
+                                    <th scope="col" class="text-end">Total</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                <tr>
+                                    <td>
+                                        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}"
+                                            style="width: 75px; height: 75px; object-fit: cover;" class="rounded">
+                                    </td>
+                                    <td>{{ item.product.name }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <a href="{% url 'decrement_cart_item' item_id=item.id %}"
+                                                class="btn btn-outline-secondary btn-sm">-</a>
+                                            <span class="mx-3">{{ item.quantity }}</span>
+                                            <a href="{% url 'increment_cart_item' item_id=item.id %}"
+                                                class="btn btn-outline-secondary btn-sm">+</a>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">₹{{ item.product.price|floatformat:2 }}</td>
+                                    <!-- Is line mein galti thi, ab theek hai -->
+                                    <td class="text-end">
+                                        ₹{% widthratio item.product.price 1 item.quantity as subtotal %}{{ subtotal|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'remove_from_cart' item_id=item.id %}"
+                                            class="btn btn-outline-danger btn-sm" title="Remove item">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="col-lg-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            {% if coupon %}
+            <h5 class="card-title mb-3">Coupon Applied!</h5>
+            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                <span><strong>{{ coupon.code }}</strong></span>
+                <a href="{% url 'remove_coupon' %}" class="btn-close" title="Remove Coupon"></a>
+            </div>
+            {% else %}
+            <h5 class="card-title mb-3">Apply Coupon</h5>
+            <form action="{% url 'apply_coupon' %}" method="post" class="d-flex">
+                {% csrf_token %}
+                {{ coupon_apply_form.code }}
+                <button type="submit" class="btn btn-primary ms-2">Apply</button>
+            </form>
+            {% endif %}
+
+            <hr>
+
+            <h5 class="card-title mb-3">Order Summary</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Subtotal
+                    <span>₹{{ total_price|floatformat:2 }}</span>
+                </li>
+
+                {% if coupon %}
+                <li class="list-group-item d-flex justify-content-between align-items-center text-success">
+                    <span>Discount ({{ coupon.discount_percent }}%)</span>
+                    <span class="fw-bold">- ₹{{ discount_amount|floatformat:2 }}</span>
+                </li>
+                {% endif %}
+
+                <li
+                    class="list-group-item d-flex justify-content-between align-items-center fw-bold fs-5 border-top pt-3">
+                    Grand Total
+                    <span>₹{{ final_price|floatformat:2 }}</span>
+                </li>
+            </ul>
+
+            <div class="d-grid mt-4">
+                <a href="{% url 'checkout_address' %}" class="btn btn-primary btn-lg">Proceed to Checkout</a>
+            </div>
+        </div>
     </div>
-    <div class="text-end mt-4">
-        <a href="{% url 'checkout_address' %}" class="btn btn-primary btn-lg">Proceed to Checkout</a>
-    </div>
+</div>
+
     {% endif %}
 </div>
 {% endblock %}
