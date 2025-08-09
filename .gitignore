@@ -13,5 +13,3 @@ db.sqlite3
 /static_root/
 /media/
 
-# AI Data
-/ai_data/

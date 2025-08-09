@@ -1,0 +1,35 @@
+[
+    {
+        "id": 9,
+        "name": "Dell laptop",
+        "description": "good",
+        "highlights": "best",
+        "price": "69000.00",
+        "market_price": null,
+        "discount_percentage": 0,
+        "stock": 60,
+        "category": "laptop"
+    },
+    {
+        "id": 10,
+        "name": "Vivo y300 5G",
+        "description": "best",
+        "highlights": "Buy vivo Y300 5G online at best price with offers in India. vivo Y300 5G (Titanium Silver, 128 GB) features and specifications include 8 GB RAM, 128 GB ROM, 5000 mAh battery, 50 MP back camera.",
+        "price": "23000.00",
+        "market_price": null,
+        "discount_percentage": 0,
+        "stock": 99,
+        "category": "Smartphone"
+    },
+    {
+        "id": 11,
+        "name": "Dell mouse",
+        "description": "good",
+        "highlights": "good for any laptop",
+        "price": "800.00",
+        "market_price": null,
+        "discount_percentage": 0,
+        "stock": 1890,
+        "category": "mouse"
+    }
+]
