@@ -46,10 +46,11 @@
                                                 class="btn btn-outline-secondary btn-sm">+</a>
                                         </div>
                                     </td>
-                                    <td class="text-end">₹{{ item.product.price|floatformat:2 }}</td>
-                                    <!-- Is line mein galti thi, ab theek hai -->
+                                    <td class="text-end">₹{{ item.current_price|floatformat:2 }}</td>
+                                    
                                     <td class="text-end">
-                                        ₹{% widthratio item.product.price 1 item.quantity as subtotal %}{{ subtotal|floatformat:2 }}
+                                        ₹{% widthratio item.current_price 1 item.quantity as subtotal %}{{ subtotal|floatformat:2 }}
+
                                     </td>
                                     <td>
                                         <a href="{% url 'remove_from_cart' item_id=item.id %}"

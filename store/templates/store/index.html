@@ -78,6 +78,48 @@
     </div>
     {% endif %}
 
+    {% if deal_of_the_day %}
+    <div class="card shadow-sm mb-4 border-danger border-2">
+        <div class="card-header bg-danger text-white text-center">
+            <h2 class="card-title mb-0">🔥 DEAL OF THE DAY 🔥</h2>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+
+                <div class="col-md-4 text-center">
+                    <a href="{% url 'product_detail' deal_of_the_day.product.id %}">
+                        <img src="{{ deal_of_the_day.product.image_url }}" class="img-fluid rounded"
+                            alt="{{ deal_of_the_day.product.name }}">
+                    </a>
+                </div>
+
+                <div class="col-md-8 text-center text-md-start mt-3 mt-md-0">
+                    <h3><a href="{% url 'product_detail' deal_of_the_day.product.id %}"
+                            class="text-dark text-decoration-none">{{ deal_of_the_day.product.name }}</a></h3>
+
+                    <p class="h1 fw-bold text-success mt-3">
+                        ₹{{ deal_of_the_day.discount_price }}
+                        <small
+                            class="text-muted h4 ms-2"><del>₹{{ deal_of_the_day.product.market_price|default:deal_of_the_day.product.price }}</del></small>
+                        <span class="badge bg-success ms-3">{{ deal_discount_percent }}% OFF</span>
+                    </p>
+
+                    <h5 class="mt-4 text-muted">HURRY! Sale Ends In:</h5>
+                    <div id="countdown-timer" class="display-5 fw-bold text-danger"
+                        data-end-time="{{ deal_of_the_day.end_time.isoformat }}">
+                        -- : -- : -- : --
+                    </div>
+
+                    <a href="{% url 'product_detail' deal_of_the_day.product.id %}"
+                        class="btn btn-danger btn-lg mt-3 shadow">
+                        Grab The Deal Now! <i class="fas fa-bolt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 
 
     <div class="card shadow-sm mb-4">
@@ -200,4 +242,52 @@
         </div>
     </div>
 </div>
+<script>
+    const countdownElement = document.getElementById('countdown-timer');
+
+    
+    if (countdownElement) {
+        
+        const endTime = new Date(countdownElement.getAttribute('data-end-time')).getTime();
+
+        
+        const countdownInterval = setInterval(function () {
+            const now = new Date().getTime();
+
+            
+            const distance = endTime - now;
+
+           
+            if (distance > 0) {
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                
+                countdownElement.innerHTML = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+            } else {
+                clearInterval(countdownInterval);
+                
+                countdownElement.innerHTML = "DEAL EXPIRED";
+                countdownElement.classList.remove('text-danger');
+                countdownElement.classList.add('text-secondary');
+            }
+        }, 1000); 
+    }
+
+    document.querySelectorAll('.coupon-code-box').forEach(box => {
+        box.addEventListener('click', () => {
+            navigator.clipboard.writeText(box.textContent.trim()).then(() => {
+                const originalText = box.textContent;
+                box.textContent = 'Copied!';
+                setTimeout(() => {
+                    box.textContent = originalText;
+                }, 1500);
+            });
+        });
+    });
+</script>
+
 {% endblock %}

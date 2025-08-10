@@ -243,3 +243,14 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.discount_percent}%)"
+class DealOfTheDay(models.Model):
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, help_text="Select the product for the deal.")
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="The special discounted price for the deal.")
+    end_time = models.DateTimeField(help_text="The date and time when this deal will end.")
+    active = models.BooleanField(default=True, help_text="Is this deal currently active?")
+
+    class Meta:
+        verbose_name_plural = "Deal of the Day"
+
+    def __str__(self):
+        return f"Deal on {self.product.name} until {self.end_time.strftime('%Y-%m-%d %H:%M')}"

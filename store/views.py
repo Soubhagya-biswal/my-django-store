@@ -2,7 +2,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product, Cart, CartItem, StockNotification, Wishlist, PriceDropNotification, Order, OrderItem, Address, CancellationRequest,ReturnRequest,Review,Category,Coupon
+from .models import Product, Cart, CartItem, StockNotification, Wishlist, PriceDropNotification, Order, OrderItem, Address, CancellationRequest,ReturnRequest,Review,Category,Coupon,DealOfTheDay
 from .forms import CustomUserCreationForm, AddressForm, CancellationReasonForm,ReturnRequestForm,ReviewForm,UserProfileUpdateForm,CouponApplyForm
 from django.core.mail import send_mail
 from django.conf import settings
@@ -102,7 +102,30 @@ def homepage(request):
         valid_from__lte=now,
         valid_to__gte=now
     )
-    
+    deal_of_the_day = None
+    deal_discount_percent = 0
+    try:
+        deal_of_the_day = DealOfTheDay.objects.get(active=True, end_time__gte=now)
+        original_price = deal_of_the_day.product.market_price or deal_of_the_day.product.price
+        if original_price > 0:
+            deal_discount_percent = round(((original_price - deal_of_the_day.discount_price) / original_price) * 100)
+    except DealOfTheDay.DoesNotExist:
+        deal_of_the_day = None
+            
+    if deal_of_the_day:
+        deal_product_id = deal_of_the_day.product.id
+        deal_price = deal_of_the_day.discount_price
+
+        for product in best_deals:
+            if product.id == deal_product_id:
+                product.price = deal_price
+
+        
+        for product in product_list:
+            if product.id == deal_product_id:
+                product.price = deal_price
+
+
     paginator = Paginator(product_list, 8)
     page_number = request.GET.get('page')
     products_on_page = paginator.get_page(page_number)
@@ -115,9 +138,12 @@ def homepage(request):
         'query': query,
         'min_price': min_price,
         'max_price': max_price,
-        'homepage_coupons': homepage_coupons,  
+        'homepage_coupons': homepage_coupons,
+        'deal_of_the_day': deal_of_the_day,
+        'deal_discount_percent': deal_discount_percent,
     }
     return render(request, 'store/index.html', context)
+
 
 
 def signup(request):
@@ -239,6 +265,13 @@ def product_detail(request, product_id):
         form = ReviewForm()
 
     reviews = product.reviews.all().order_by('-created_at')
+    now = timezone.now()
+    try:
+        deal = DealOfTheDay.objects.get(product=product, active=True, end_time__gte=now)
+        product.price = deal.discount_price
+    except DealOfTheDay.DoesNotExist:
+        pass
+
     discount_percent = None
     if product.market_price and product.market_price > product.price:
         
@@ -287,20 +320,26 @@ def add_to_cart(request, product_id):
         cart_item.save()
     
     return redirect('product_detail', product_id=product_id)
-# views.py mein yeh naya view_cart function paste karein
 
 @login_required
 def view_cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.all()
-    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    now = timezone.now()
+    total_price = 0
+    for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            item.current_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            item.current_price = item.product.price
+        total_price += item.current_price * item.quantity
+
 
     coupon_apply_form = CouponApplyForm()
     coupon = None
     discount_amount = 0
     final_price = total_price
-    
-    # Session se coupon ID check karein
     coupon_id = request.session.get('coupon_id')
     if coupon_id:
         try:
@@ -321,7 +360,6 @@ def view_cart(request):
         'final_price': final_price, 
     }
     return render(request, 'store/cart.html', context)
-# views.py mein yeh naya apply_coupon function paste karein
 
 @login_required
 def apply_coupon(request):
@@ -431,8 +469,16 @@ def checkout(request):
     cart_items = cart.items.all()
     if not cart_items:
         return redirect('homepage')
+    now = timezone.now()
+    total_price = 0
+    for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            item_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            item_price = item.product.price
+        total_price += item_price * item.quantity
 
-    total_price = sum(item.product.price * item.quantity for item in cart_items)
     coupon = None
     discount_amount = 0
     final_price = total_price
@@ -468,7 +514,16 @@ def start_payment(request):
     if not cart_items:
         return redirect('homepage')
 
-    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    now = timezone.now()
+    total_price = 0
+    for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            item_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            item_price = item.product.price
+        total_price += item_price * item.quantity
+
     final_price = total_price
     coupon_id = request.session.get('coupon_id')
 
@@ -510,7 +565,7 @@ def start_payment(request):
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price
+            price=item.product.price 
         )
     callback_url = request.build_absolute_uri(reverse('payment_success'))
 
@@ -639,7 +694,17 @@ def place_cod_order(request):
     if not cart_items:
         return redirect('homepage')
 
-    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    
+    now = timezone.now()
+    total_price = 0
+    for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            item_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            item_price = item.product.price
+        total_price += item_price * item.quantity
+    
     final_price = total_price
     
     coupon_id = request.session.get('coupon_id')
@@ -670,7 +735,7 @@ def place_cod_order(request):
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price
+            price=item.product.price 
         )
 
     for item in order.items.all():

@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from .models import (
     Product, Cart, CartItem, Order, OrderItem, 
-    StockNotification, Wishlist, PriceDropNotification, Address, CancellationRequest, ReturnRequest, Review,Category,ProductImage,Coupon
+    StockNotification, Wishlist, PriceDropNotification, Address, CancellationRequest, ReturnRequest, Review,Category,ProductImage,Coupon,DealOfTheDay
 )
 from django.contrib.sessions.models import Session
 
@@ -218,3 +218,14 @@ class CouponAdmin(admin.ModelAdmin):
     list_filter = ('active', 'show_on_homepage', 'valid_to')
     search_fields = ('code', 'display_name')
     list_editable = ('active', 'show_on_homepage') 
+@admin.register(DealOfTheDay)
+class DealOfTheDayAdmin(admin.ModelAdmin):
+    list_display = ('product', 'discount_price', 'end_time', 'active')
+    list_filter = ('active', 'end_time')
+    search_fields = ('product__name',)
+    list_editable = ('active', 'discount_price')
+    def save_model(self, request, obj, form, change):
+        if obj.active:
+            DealOfTheDay.objects.filter(active=True).exclude(pk=obj.pk).update(active=False)
+            messages.info(request, "Tabaahi! Is deal ko active karne ke liye, baaki saari deals band kar di gayi hain.")
+        super().save_model(request, obj, form, change)
