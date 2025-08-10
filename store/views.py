@@ -561,12 +561,19 @@ def start_payment(request):
     )
 
     for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            final_item_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            final_item_price = item.product.price
+
         OrderItem.objects.create(
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price 
+            price=final_item_price
         )
+
     callback_url = request.build_absolute_uri(reverse('payment_success'))
 
     context = {
@@ -577,7 +584,6 @@ def start_payment(request):
         'order': order,
         'callback_url': callback_url  
     }
-
     return render(request, 'store/payment.html', context)
 
 
@@ -694,7 +700,6 @@ def place_cod_order(request):
     if not cart_items:
         return redirect('homepage')
 
-    
     now = timezone.now()
     total_price = 0
     for item in cart_items:
@@ -729,13 +734,19 @@ def place_cod_order(request):
         status='Processing',
         estimated_delivery_date=delivery_date
     )
-
+    
     for item in cart_items:
+        try:
+            deal = DealOfTheDay.objects.get(product=item.product, active=True, end_time__gte=now)
+            final_item_price = deal.discount_price
+        except DealOfTheDay.DoesNotExist:
+            final_item_price = item.product.price
+
         OrderItem.objects.create(
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price 
+            price=final_item_price 
         )
 
     for item in order.items.all():
