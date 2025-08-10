@@ -22,30 +22,30 @@
 
         <div class="col-md-6">
             <div class="row">
-                
+
                 <div class="col-2">
                     <div class="thumbnail-gallery">
-                        
+
                         <img src="{{ product.image_url }}" class="img-fluid thumbnail-item active"
                             onclick="changeImage(this)">
 
                         {% for img in product.images.all %}
-                        
+
                         <img src="{{ img.image_url }}" class="img-fluid thumbnail-item" onclick="changeImage(this)">
                         {% endfor %}
                     </div>
                 </div>
-                
+
                 <div class="col-10">
                     <div class="zoom-container">
-                        
+
                         <img src="{{ product.image_url }}" id="main-product-image" class="img-fluid rounded"
                             alt="{{ product.name }}">
                     </div>
                 </div>
             </div>
         </div>
-    
+
         <div class="col-md-6">
             <div class="d-flex align-items-center mb-2">
                 <h1>{{ product.name }}</h1>
@@ -66,6 +66,12 @@
                 {% endif %}
                 {% endif %}
             </h3>
+            {% if sales_last_7_days > 0 %}
+            <div class="alert alert-info mt-3" style="font-weight: bold; text-align: center;">
+                🔥 Tabaahi! Sold <strong>{{ sales_last_7_days }}</strong> times in the last 7 days!
+            </div>
+            {% endif %}
+
 
             {% if product.highlights %}
             <div class="highlights-section my-4">
@@ -132,7 +138,7 @@
             {% endif %}
             {% endif %}
         </div>
-        
+
     </div>
 
     <div class="row mt-5">
@@ -191,7 +197,6 @@
 
 
 <script>
-    
     function changeImage(element) {
         var mainImage = document.getElementById('main-product-image');
         mainImage.src = element.src;
@@ -261,7 +266,6 @@
 </script>
 
 <style>
-    
     .ai-chat-fab {
         position: fixed;
         bottom: 25px;
@@ -399,7 +403,7 @@
     const sendBtn = document.getElementById('ai-chat-send-btn');
     const inputBox = document.getElementById('ai-chat-input');
 
-    
+
     toggleBtn.addEventListener('click', () => chatWindow.classList.toggle('open'));
     closeBtn.addEventListener('click', () => chatWindow.classList.remove('open'));
     sendBtn.addEventListener('click', sendMessage);
@@ -412,15 +416,15 @@
     function sendMessage() {
         const question = inputBox.value.trim();
         if (question === "") {
-            return; 
+            return;
         }
         addMessage(question, 'user');
-        inputBox.value = ""; 
+        inputBox.value = "";
 
-        
+
         addMessage('...', 'bot', true);
         const productId = chatWindow.dataset.productId;
-        const url = "{% url 'ask_ai' %}"; 
+        const url = "{% url 'ask_ai' %}";
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         fetch(url, {
@@ -452,14 +456,14 @@
             p.id = 'loading-message';
         }
         messagesArea.appendChild(p);
-        messagesArea.scrollTop = messagesArea.scrollHeight; 
+        messagesArea.scrollTop = messagesArea.scrollHeight;
     }
 
     function updateLastBotMessage(text) {
         const loadingMessage = document.getElementById('loading-message');
         if (loadingMessage) {
             loadingMessage.textContent = text;
-            loadingMessage.id = ''; 
+            loadingMessage.id = '';
         }
     }
 

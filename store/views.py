@@ -244,7 +244,12 @@ def product_detail(request, product_id):
         
         discount_percent = min(((product.market_price - product.price) / product.market_price) * 100, 99.99)
         discount_percent = round(discount_percent)
-    
+        
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    sales_last_7_days = OrderItem.objects.filter(
+        product=product, order__created_at__gte=seven_days_ago, order__status='Delivered'
+    ).aggregate(total_sold=Sum('quantity'))['total_sold'] or 0
+
     context = {
         'product': product,
         'is_subscribed': is_subscribed,
@@ -255,6 +260,8 @@ def product_detail(request, product_id):
         'user_has_reviewed': user_has_reviewed,
         'average_rating': average_rating,
         'discount_percent': discount_percent,
+        'sales_last_7_days': sales_last_7_days,
+
     }
     return render(request, 'store/product_detail.html', context)
 @login_required
