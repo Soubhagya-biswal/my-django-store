@@ -103,7 +103,7 @@ def homepage(request):
         valid_to__gte=now
     )
     
-    paginator = Paginator(product_list, 8)
+    paginator = Paginator(product_list, 3)
     page_number = request.GET.get('page')
     products_on_page = paginator.get_page(page_number)
     
