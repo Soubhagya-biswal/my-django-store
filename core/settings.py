@@ -11,11 +11,9 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 ALLOWED_HOSTS.append('127.0.0.1')
 
-# ========================================================
-# YEH HAI HUMARA TABAHAHI WAALA NAYA, SAHI ORDER
-# ========================================================
+
 INSTALLED_APPS = [
-    'store', # <-- Apni app ko upar rakha, taaki admin template override ho sake
+    'store', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -25,18 +23,33 @@ INSTALLED_APPS = [
     'crispy_forms',
     "crispy_bootstrap5",
     'widget_tweaks',
+    'axes',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'auditlog',
+
 ]
-# ========================================================
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware', 
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -95,3 +108,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your-password')
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'dummy_key_id')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'dummy_key_secret')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'dummy_google_api_key')
+
+AXES_FAILURE_LIMIT = 5  
+AXES_COOLOFF_TIME = 0.25 
+AXES_LOCKOUT_TEMPLATE = 'store/lockout.html'

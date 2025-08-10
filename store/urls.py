@@ -9,8 +9,7 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('login/', views.login_view, name='login'),
-    
-    
+    path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('logout/', views.logout_request, name='logout'),
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('ask-ai/', views.ask_ai_buddy, name='ask_ai'),
@@ -36,6 +35,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
+    path('manage-2fa/', views.manage_2fa, name='manage_2fa'),
     path('my-reviews/', views.my_reviews, name='my_reviews'),
     path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),
     path('check_delivery/', views.check_delivery, name='check_delivery'),

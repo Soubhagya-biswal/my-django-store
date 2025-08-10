@@ -33,6 +33,10 @@ import json
 import google.generativeai as genai
 import os
 from django.urls import reverse
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import qrcode
+import qrcode.image.svg
+from io import BytesIO
 
 
 def get_estimated_delivery_date(pincode):
@@ -203,19 +207,45 @@ def activate(request, uidb64, token):
         return render(request, 'store/activation_success.html')
     else:
         return render(request, 'store/activation_invalid.html')
+# YEH HAI NAYA, TABAHAHI WAALA LOGIN VIEW
+# YEH HAI NAYA, 100% CORRECT TABAHAHI WAALA LOGIN VIEW
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('homepage')
+
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        # YEH HAI ASLI ILAJ - 'request' ko form mein bhejo!
+        form = AuthenticationForm(request=request, data=request.POST)
+        
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
+            # Ab form se seedha user nikaalo, kyunki form ne hi sab check kar liya hai
+            user = form.get_user()
+
+            # Ab check karo ki 2FA chalu hai ya nahi
+            device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+            
+            if device:
+                # Agar 2FA chalu hai, toh login mat karo.
+                # User ki ID session mein daal kar, OTP page par bhej do.
+                request.session['pre_2fa_user_id'] = user.id
+                return redirect('verify_otp') # Is page ko hum agle kadam mein banayenge
+            else:
+                # Agar 2FA chalu nahi hai, toh seedha login kar do.
                 login(request, user)
+                messages.success(request, f' Welcome back, {user.username}!')
                 return redirect('homepage')
+        else:
+            # Form valid nahi hai (ya account locked hai)
+            messages.error(request, 'Invalid username or password. If you tried multiple times, your account might be locked for 15 minutes.')
+            return render(request, 'store/login.html', {'form': form})
+
     else:
+        # GET request ke liye khaali form dikhao
         form = AuthenticationForm()
+
     return render(request, 'store/login.html', {'form': form})
+
+
 def logout_request(request):
     logout(request)
     return redirect('homepage')
@@ -784,12 +814,8 @@ def request_cancellation(request, order_id):
 
 
 @login_required
-# views.py mein yeh naya request_return function paste karein
-
 def request_return(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-
-    # Security Check: Yahan hum 'delivered_at' ka istemal kar rahe hain
     is_eligible = (
         order.status == 'Delivered' and 
         order.delivered_at and 
@@ -1045,3 +1071,79 @@ def ai_chat_page(request):
     Yeh function bas humare naye, general AI Chat Room ke 'chehre' (HTML page) ko dikhata hai.
     """
     return render(request, 'store/ai_chat_page.html')
+@login_required
+def manage_2fa(request):
+    
+    device = TOTPDevice.objects.filter(user=request.user).first()
+    
+    if request.method == 'POST':
+
+        if 'enable_2fa' in request.POST:
+            otp = request.POST.get('otp')
+            if not otp:
+                messages.error(request, 'please enter the otp!')
+            
+            elif device and not device.confirmed and device.verify_token(otp):
+                device.confirmed = True
+                device.save()
+                messages.success(request, 'Nice! Two-Factor Authentication is being started')
+                return redirect('manage_2fa')
+            else:
+                messages.error(request, 'wrong OTP, please enter the right otp from the google Authenticator app .')
+        
+        
+        elif 'disable_2fa' in request.POST:
+            if device:
+                device.delete()
+                messages.success(request, 'Two-Factor Authentication is stoped.')
+                return redirect('manage_2fa')
+
+    
+    qr_code_svg = None
+    
+    if not device or not device.confirmed:
+        
+        if not device:
+            device = TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
+        
+        config_url = device.config_url
+        stream = BytesIO()
+        img = qrcode.make(config_url, image_factory=qrcode.image.svg.SvgPathImage)
+        img.save(stream)
+        qr_code_svg = stream.getvalue().decode()
+
+    context = {
+        'device': device,
+        'qr_code_svg': qr_code_svg
+    }
+    return render(request, 'store/manage_2fa.html', context)
+# YEH HAI NAYA, 100% CORRECT TABAHAHI WAALA OTP VIEW
+def verify_otp(request):
+    if 'pre_2fa_user_id' not in request.session:
+        messages.error(request, 'Bhai, pehle login toh kar!')
+        return redirect('login')
+
+    user_id = request.session.get('pre_2fa_user_id')
+    user = get_object_or_404(User, id=user_id)
+    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+
+    if not device:
+        messages.error(request, 'Tere account par 2FA chalu nahi hai. Yeh kya kar raha hai, bhai?')
+        del request.session['pre_2fa_user_id']
+        return redirect('login')
+    
+    if request.method == 'POST':
+        otp = request.POST.get('otp')
+        if not otp:
+            messages.error(request, 'Bhai, OTP toh daal!')
+        elif device.verify_token(otp):
+            # YEH HAI ASLI ILAJ! Hum Django ko bata rahe hain ki kaunsa guard istemal karna hai.
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+            del request.session['pre_2fa_user_id']
+            messages.success(request, f'Tabaahi! Welcome back, {user.username}!')
+            return redirect('homepage')
+        else:
+            messages.error(request, 'Galat OTP, bhai! Phir se try kar.')
+
+    return render(request, 'store/verify_otp.html')

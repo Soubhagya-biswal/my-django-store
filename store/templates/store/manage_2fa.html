@@ -1,0 +1,67 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Two-Factor Authentication (2FA)</h1>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    {% if device and device.confirmed %}
+
+                    <div class="alert alert-success text-center">
+                        <h4 class="alert-heading"><i class="fas fa-shield-alt"></i> Great! 2FA is Active!</h4>
+                        <p>Your account is protected with an extra layer of security.</p>
+                    </div>
+                    <p class="text-center">If you want to disable 2FA, you can do so below. But we strongly recommend
+                        keeping it enabled.</p>
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <button type="submit" name="disable_2fa" class="btn btn-danger">
+                            <i class="fas fa-lock-open"></i> Disable 2FA
+                        </button>
+                    </form>
+
+                    {% else %}
+
+                    <h4 class="card-title text-center mb-4">Setup Two-Factor Authentication</h4>
+
+                    <div class="row align-items-center">
+                        <div class="col-md-5 text-center">
+                            <p><strong>1. Scan this QR Code</strong></p>
+                            <div class="p-3 border rounded d-inline-block">
+                                {{ qr_code_svg|safe }}
+                            </div>
+                            <p class="mt-2 small text-muted">Use an authenticator app like Google Authenticator or
+                                Authy.</p>
+                        </div>
+
+                        <div class="col-md-7">
+                            <p><strong>2. Enter the OTP</strong></p>
+                            <p>After scanning, your app will show a 6-digit code. Enter it here to complete the setup.
+                            </p>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="otp" class="form-label">One-Time Password (OTP)</label>
+                                    <input type="text" name="otp" id="otp" class="form-control" required autofocus
+                                        pattern="\d{6}" title="Enter the 6-digit code from your app">
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" name="enable_2fa" class="btn btn-primary">
+                                        <i class="fas fa-check-circle"></i> Enable 2FA
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

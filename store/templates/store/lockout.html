@@ -1,0 +1,23 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="alert alert-danger shadow-lg">
+                <h1 class="display-4"><i class="fas fa-lock"></i> Account Locked</h1>
+                <hr>
+                <p class="lead">
+                    You have made too many failed login attempts.
+                </p>
+                <p>
+                    For your security, your account has been temporarily locked.
+                    Please try again in about <strong>15 minutes</strong>.
+                </p>
+                <a href="{% url 'homepage' %}" class="btn btn-primary mt-3">Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
