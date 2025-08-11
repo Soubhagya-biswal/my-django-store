@@ -20,3 +20,4 @@ django-axes
 django-otp
 qrcode
 django-auditlog
+setuptools
