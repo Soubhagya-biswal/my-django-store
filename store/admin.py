@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from .models import (
     Product, Cart, CartItem, Order, OrderItem, 
-    StockNotification, Wishlist, PriceDropNotification, Address, CancellationRequest, ReturnRequest, Review,Category,ProductImage,Coupon,DealOfTheDay
+    StockNotification, Wishlist, PriceDropNotification, Address, CancellationRequest, ReturnRequest, Review,Category,ProductImage,Coupon,DealOfTheDay, UserActivity
 )
 from django.contrib.sessions.models import Session
 
@@ -75,6 +75,7 @@ admin.site.register(PriceDropNotification)
 admin.site.register(Address)
 admin.site.register(Review)
 admin.site.register(Category)
+admin.site.register(UserActivity)
 
 
 @admin.register(CancellationRequest)

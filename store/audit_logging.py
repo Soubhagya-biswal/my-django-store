@@ -7,5 +7,3 @@ auditlog.register(Product)
 auditlog.register(Order)
 auditlog.register(Address)
 auditlog.register(Review)
-
-print("TABAHAHI LOGGING: Saare cameras (models) register ho gaye hain!")

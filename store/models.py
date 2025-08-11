@@ -243,6 +243,7 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.discount_percent}%)"
+    
 class DealOfTheDay(models.Model):
     product = models.OneToOneField(Product, on_delete=models.CASCADE, help_text="Select the product for the deal.")
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="The special discounted price for the deal.")
@@ -254,3 +255,38 @@ class DealOfTheDay(models.Model):
 
     def __str__(self):
         return f"Deal on {self.product.name} until {self.end_time.strftime('%Y-%m-%d %H:%M')}"
+class UserActivity(models.Model):
+    
+    ACTIVITY_TYPES = [
+        ('product_view', 'Product View'),
+        ('category_view', 'Category View'),
+        ('add_to_cart', 'Add to Cart'),
+        ('search', 'Search'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True, db_index=True)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    
+   
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    
+    search_query = models.CharField(max_length=255, null=True, blank=True)
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        if self.user:
+            actor = self.user.username
+        else:
+            actor = f"Guest (Session: {self.session_key[:6]}...)"
+        
+        if self.product:
+            return f"{actor} - {self.activity_type} - {self.product.name}"
+        elif self.category:
+            return f"{actor} - {self.activity_type} - {self.category.name}"
+        elif self.search_query:
+            return f"{actor} - {self.activity_type} - '{self.search_query}'"
+        else:
+            return f"{actor} - {self.activity_type}"

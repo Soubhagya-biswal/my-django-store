@@ -2,7 +2,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product, Cart, CartItem, StockNotification, Wishlist, PriceDropNotification, Order, OrderItem, Address, CancellationRequest,ReturnRequest,Review,Category,Coupon,DealOfTheDay
+from .models import Product, Cart, CartItem, StockNotification, Wishlist, PriceDropNotification, Order, OrderItem, Address, CancellationRequest,ReturnRequest,Review,Category,Coupon,DealOfTheDay,UserActivity
 from .forms import CustomUserCreationForm, AddressForm, CancellationReasonForm,ReturnRequestForm,ReviewForm,UserProfileUpdateForm,CouponApplyForm
 from django.core.mail import send_mail
 from django.conf import settings
@@ -89,13 +89,50 @@ def homepage(request):
     
     if query:
         product_list = product_list.filter(Q(name__icontains=query) | Q(description__icontains=query))
+        if request.user.is_authenticated:
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='search',
+                search_query=query
+            )
+        else:
+            if not request.session.session_key:
+                request.session.create()
+            session_key = request.session.session_key
+            UserActivity.objects.create(
+                session_key=session_key,
+                activity_type='search',
+                search_query=query
+            )
     if min_price:
         product_list = product_list.filter(price__gte=min_price)
     if max_price:
         product_list = product_list.filter(price__lte=max_price)
     if category and category != 'All':
         product_list = product_list.filter(category__name=category)
-        
+               
+        try:
+            
+            category_obj = Category.objects.get(name__iexact=category)
+            if request.user.is_authenticated:
+                UserActivity.objects.create(
+                    user=request.user,
+                    activity_type='category_view',
+                    category=category_obj
+                )
+            else:
+                if not request.session.session_key:
+                    request.session.create()
+                session_key = request.session.session_key
+                UserActivity.objects.create(
+                    session_key=session_key,
+                    activity_type='category_view',
+                    category=category_obj
+                )
+        except Category.DoesNotExist:
+            
+            pass
+      
     categories = Category.objects.all()
     best_deals = Product.objects.filter(is_best_deal=True)
     
@@ -147,8 +184,6 @@ def homepage(request):
         'deal_discount_percent': deal_discount_percent,
     }
     return render(request, 'store/index.html', context)
-
-
 
 def signup(request):
     if request.method == 'POST':
@@ -253,7 +288,21 @@ def logout_request(request):
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    
+    if request.user.is_authenticated:
+        UserActivity.objects.create(
+            user=request.user,
+            activity_type='product_view',
+            product=product
+        )
+    else:
+        if not request.session.session_key:
+            request.session.create()
+        session_key = request.session.session_key
+        UserActivity.objects.create(
+            session_key=session_key,
+            activity_type='product_view',
+            product=product
+        )
     
     average_rating = product.reviews.aggregate(Avg('rating'))['rating__avg']
     if average_rating is not None:
