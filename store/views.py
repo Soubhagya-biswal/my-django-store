@@ -1048,12 +1048,50 @@ def sales_chart_iframe(request):
 genai.configure(api_key=settings.GOOGLE_API_KEY)
 
 @csrf_exempt
+
+def normalize_query(query):
+    """
+    Yeh function user ki query ko saaf karta hai.
+    - Common desi shabdon ko English mein badalta hai.
+    - Chhote-mote typos theek karta hai.
+    """
+    query = query.lower()
+
+    synonyms = {
+        "sasta": "budget-friendly",
+        "mehenga": "premium",
+        "tikau": "durable",
+        "chalne wala": "long battery life",
+        "headfone": "headphone",
+        "joota": "shoe",
+        "sert": "shirt",
+        "kitne ka hai": "what is the price",
+        "daam kya hai": "what is the price",
+    }
+
+    typos = {
+        "mobl": "mobile",
+        "cahrger": "charger",
+    }
+
+    for wrong, right in typos.items():
+        if wrong in query:
+            query = query.replace(wrong, right)
+    
+    
+    for desi, english in synonyms.items():
+        if desi in query:
+            query = query.replace(desi, english)
+
+    return query
+
 def ask_ai_buddy(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             product_id = data.get('product_id')
             question = data.get('question')
+            question = normalize_query(question) 
 
             if not product_id or not question:
                 return JsonResponse({'answer': 'Error: Missing product ID or question.'}, status=400)
