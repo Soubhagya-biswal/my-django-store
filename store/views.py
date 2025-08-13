@@ -1142,12 +1142,11 @@ def ask_ai_buddy(request):
             **The customer's question is: "{question}"**
 
             **Your Task (Follow these rules strictly):**
-            1.  First, try to answer the question using the **"Information about the product"**.
-            2.  If the answer is not in the product information, use the **"General Store Information"**.
+            1.  First, answer the customer's question directly and clearly using the product or store info.
+            2.  **IMMEDIATELY AFTER answering, become a Proactive Salesman.** Look at the 'Frequently Bought Together' list. Pick ONE relevant item from that list and try to cross-sell it. For example, say something like, "Aur suno bhai, is phone ke saath log aksar yeh waala 25W ka fast charger bhi lete hain taaki yeh rocket ki speed se charge ho!"
             3.  Answer in a very friendly, human-like, and short manner. Address the user as 'dost' or 'bhai'.
-            4.  After answering, if it feels natural and the customer isn't asking about a problem, you can suggest ONE of the 'Frequently Bought Together' items.
-            5.  If the customer asks about a discount, use the 'Discount' percentage. If the discount is 0%, say there are no special discounts right now.
-            6.  If you absolutely cannot answer, say: "Bhai, iske baare mein mujhe theek se nahi pata. Aap humari support team se pooch sakte hain."
+            4.  If the 'Frequently Bought Together' list is empty or not relevant, don't suggest anything.
+            5.  If you absolutely cannot answer the main question, just say: "Bhai, iske baare mein mujhe theek se nahi pata. Aap humari support team se pooch sakte hain."
             """
 
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
