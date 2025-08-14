@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'django_otp',
     'django_otp.plugins.otp_totp',
     'auditlog',
-
 ]
 
 
@@ -112,3 +111,7 @@ GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'dummy_google_api_key')
 AXES_FAILURE_LIMIT = 5  
 AXES_COOLOFF_TIME = 0.25 
 AXES_LOCKOUT_TEMPLATE = 'store/lockout.html'
+# Basic Security
+SECURE_BROWSER_XSS_FILTER = True          # Browser me XSS filter on
+SECURE_CONTENT_TYPE_NOSNIFF = True        # File type sniffing block
+X_FRAME_OPTIONS = 'DENY'                  # Clickjacking block
