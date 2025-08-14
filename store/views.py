@@ -1218,7 +1218,7 @@ def manage_2fa(request):
 
 def verify_otp(request):
     if 'pre_2fa_user_id' not in request.session:
-        messages.error(request, 'Bhai, pehle login toh kar!')
+        messages.error(request, 'please login first')
         return redirect('login')
 
     user_id = request.session.get('pre_2fa_user_id')
@@ -1226,7 +1226,7 @@ def verify_otp(request):
     device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
 
     if not device:
-        messages.error(request, 'Tere account par 2FA chalu nahi hai. Yeh kya kar raha hai, bhai?')
+        messages.error(request, 'your account does not have 2 step verification on ?')
         del request.session['pre_2fa_user_id']
         return redirect('login')
     
