@@ -1199,7 +1199,7 @@ def manage_2fa(request):
     
     qr_code_svg = None
     
-    if not device or not device.confirmeds:
+    if not device or not device.confirmed:
         
         if not device:
             device = TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
